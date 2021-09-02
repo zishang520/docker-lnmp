@@ -1,0 +1,74 @@
+version: "3.9"
+
+services:
+  docker_php:
+    container_name: docker_php
+    image: php:7.4.23-fpm-alpine3.13
+    tty: true
+    restart: always
+    expose:
+      - "9000"
+    ports:
+      - "127.0.0.1:9000:9000"
+    working_dir: /www
+    volumes:
+      - ./nginx/www:/www
+      - ./php/logs:/var/log/php-fpm
+      - ./php/php-fpm.d:/usr/local/etc/php-fpm.d
+      - php-fpm:/var/run/php-fpm
+      - mysqld:/var/run/mysqld
+    depends_on:
+      - docker_mysql
+      - docker_redis
+    links:
+      - docker_mysql:docker_mysql
+      - docker_redis:docker_redis
+  docker_nginx:
+    container_name: docker_nginx
+    image: nginx:stable-alpine
+    tty: true
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    working_dir: /www
+    volumes:
+      - ./nginx/www:/www
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/conf/conf.d:/etc/nginx/conf.d
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - php-fpm:/var/run/php-fpm
+    depends_on:
+      - docker_php
+    links:
+      - docker_php
+  docker_mysql:
+    container_name: docker_mysql
+    image: mysql:5.7.35
+    restart: always
+    expose:
+      - "3306"
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - ./mysql/conf.d:/etc/mysql/conf.d
+      - ./mysql/logs:/logs
+      - ./mysql/data:/var/lib/mysql
+      - mysqld:/var/run/mysqld
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  docker_redis:
+    container_name: docker_redis
+    image: redis:latest
+    restart: always
+    expose:
+      - "6379"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - ./redis:/data
+    command: redis-server --appendonly yes --requirepass "root"
+volumes:
+  php-fpm:
+  mysqld:
