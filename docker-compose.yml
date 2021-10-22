@@ -3,7 +3,7 @@ version: "3.9"
 services:
   docker_php:
     container_name: docker_php
-    image: php:7.4.23-fpm-alpine3.13
+    image: php
     tty: true
     restart: always
     expose:
