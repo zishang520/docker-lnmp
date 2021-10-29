@@ -20,9 +20,11 @@ services:
     depends_on:
       - docker_mysql
       - docker_redis
+      - docker_mongo
     links:
       - docker_mysql:docker_mysql
       - docker_redis:docker_redis
+      - docker_mongo:docker_mongo
   docker_nginx:
     container_name: docker_nginx
     image: nginx:stable-alpine
@@ -41,7 +43,7 @@ services:
     depends_on:
       - docker_php
     links:
-      - docker_php
+      - docker_php:docker_php
   docker_mysql:
     container_name: docker_mysql
     image: mysql:5.7.35
@@ -56,7 +58,7 @@ services:
       - ./mysql/data:/var/lib/mysql
       - mysqld:/var/run/mysqld
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD:
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci
   docker_redis:
     container_name: docker_redis
@@ -68,7 +70,7 @@ services:
       - "127.0.0.1:6379:6379"
     volumes:
       - ./redis/data:/data
-    command: redis-server --appendonly yes --requirepass "root"
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
   docker_mongo:
     container_name: docker_mongo
     image: mongo:latest
@@ -80,8 +82,8 @@ services:
     volumes:
       - ./mongod/data:/data
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_ROOT_USERNAME:
+      MONGO_INITDB_ROOT_PASSWORD:
 volumes:
   php-fpm:
   mysqld:
