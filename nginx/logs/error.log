@@ -1,0 +1,72 @@
+2021/10/29 06:27:12 [notice] 1#1: using the "epoll" event method
+2021/10/29 06:27:12 [notice] 1#1: nginx/1.20.1
+2021/10/29 06:27:12 [notice] 1#1: built by gcc 10.2.1 20201203 (Alpine 10.2.1_pre1) 
+2021/10/29 06:27:12 [notice] 1#1: OS: Linux 5.10.60.1-microsoft-standard-WSL2
+2021/10/29 06:27:12 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2021/10/29 06:27:12 [notice] 1#1: start worker processes
+2021/10/29 06:27:12 [notice] 1#1: start worker process 32
+2021/10/29 06:27:12 [notice] 1#1: start worker process 33
+2021/10/29 06:27:12 [notice] 1#1: start worker process 34
+2021/10/29 06:27:12 [notice] 1#1: start worker process 35
+2021/10/29 06:27:12 [notice] 1#1: start worker process 36
+2021/10/29 06:27:12 [notice] 1#1: start worker process 37
+2021/10/29 06:27:12 [notice] 1#1: start worker process 38
+2021/10/29 06:27:12 [notice] 1#1: start worker process 39
+2021/10/29 06:27:57 [error] 38#38: *1 "/www/default/index.html" is not found (2: No such file or directory), client: 172.19.0.1, server: localhost, request: "GET / HTTP/1.1", host: "ess-server-local.loi4.com"
+2021/10/29 06:27:57 [error] 38#38: *1 open() "/www/default/favicon.ico" failed (2: No such file or directory), client: 172.19.0.1, server: localhost, request: "GET /favicon.ico HTTP/1.1", host: "ess-server-local.loi4.com", referrer: "http://ess-server-local.loi4.com/"
+2021/10/29 06:40:11 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2021/10/29 06:40:11 [notice] 32#32: gracefully shutting down
+2021/10/29 06:40:11 [notice] 34#34: gracefully shutting down
+2021/10/29 06:40:11 [notice] 36#36: gracefully shutting down
+2021/10/29 06:40:11 [notice] 37#37: gracefully shutting down
+2021/10/29 06:40:11 [notice] 39#39: gracefully shutting down
+2021/10/29 06:40:11 [notice] 35#35: gracefully shutting down
+2021/10/29 06:40:11 [notice] 33#33: gracefully shutting down
+2021/10/29 06:40:11 [notice] 35#35: exiting
+2021/10/29 06:40:11 [notice] 33#33: exiting
+2021/10/29 06:40:11 [notice] 32#32: exiting
+2021/10/29 06:40:11 [notice] 37#37: exiting
+2021/10/29 06:40:11 [notice] 36#36: exiting
+2021/10/29 06:40:11 [notice] 34#34: exiting
+2021/10/29 06:40:11 [notice] 39#39: exiting
+2021/10/29 06:40:11 [notice] 35#35: exit
+2021/10/29 06:40:11 [notice] 33#33: exit
+2021/10/29 06:40:11 [notice] 32#32: exit
+2021/10/29 06:40:11 [notice] 37#37: exit
+2021/10/29 06:40:11 [notice] 36#36: exit
+2021/10/29 06:40:11 [notice] 38#38: gracefully shutting down
+2021/10/29 06:40:11 [notice] 39#39: exit
+2021/10/29 06:40:11 [notice] 34#34: exit
+2021/10/29 06:40:11 [notice] 38#38: exiting
+2021/10/29 06:40:11 [notice] 38#38: exit
+2021/10/29 06:40:11 [notice] 1#1: signal 17 (SIGCHLD) received from 38
+2021/10/29 06:40:11 [notice] 1#1: worker process 34 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: worker process 35 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: worker process 38 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: signal 29 (SIGIO) received
+2021/10/29 06:40:11 [notice] 1#1: signal 17 (SIGCHLD) received from 34
+2021/10/29 06:40:11 [notice] 1#1: signal 17 (SIGCHLD) received from 32
+2021/10/29 06:40:11 [notice] 1#1: worker process 32 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: signal 29 (SIGIO) received
+2021/10/29 06:40:11 [notice] 1#1: signal 17 (SIGCHLD) received from 36
+2021/10/29 06:40:11 [notice] 1#1: worker process 36 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: worker process 39 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: signal 29 (SIGIO) received
+2021/10/29 06:40:11 [notice] 1#1: signal 17 (SIGCHLD) received from 33
+2021/10/29 06:40:11 [notice] 1#1: worker process 33 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: worker process 37 exited with code 0
+2021/10/29 06:40:11 [notice] 1#1: exit
+2021/10/29 06:42:30 [notice] 1#1: using the "epoll" event method
+2021/10/29 06:42:30 [notice] 1#1: nginx/1.20.1
+2021/10/29 06:42:30 [notice] 1#1: built by gcc 10.2.1 20201203 (Alpine 10.2.1_pre1) 
+2021/10/29 06:42:30 [notice] 1#1: OS: Linux 5.10.60.1-microsoft-standard-WSL2
+2021/10/29 06:42:30 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2021/10/29 06:42:30 [notice] 1#1: start worker processes
+2021/10/29 06:42:30 [notice] 1#1: start worker process 32
+2021/10/29 06:42:30 [notice] 1#1: start worker process 33
+2021/10/29 06:42:30 [notice] 1#1: start worker process 34
+2021/10/29 06:42:30 [notice] 1#1: start worker process 35
+2021/10/29 06:42:30 [notice] 1#1: start worker process 36
+2021/10/29 06:42:30 [notice] 1#1: start worker process 37
+2021/10/29 06:42:30 [notice] 1#1: start worker process 38
+2021/10/29 06:42:30 [notice] 1#1: start worker process 39

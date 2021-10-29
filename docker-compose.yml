@@ -67,8 +67,21 @@ services:
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
-      - ./redis:/data
+      - ./redis/data:/data
     command: redis-server --appendonly yes --requirepass "root"
+  docker_mongo:
+    container_name: docker_mongo
+    image: mongo:latest
+    restart: always
+    expose:
+      - "27017"
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - ./mongo/data:/data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
 volumes:
   php-fpm:
   mysqld:
