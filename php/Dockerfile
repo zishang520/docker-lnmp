@@ -22,38 +22,26 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # 修改源并更新包
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
 
+# PHP8.0 以下安装enchant1-开始
+RUN apk add autoconf m4 make gcc g++ glib-dev hunspell-dev
+ADD ./downloads/enchant.tar.gz /tmp
+COPY ./downloads/install-enchant.sh /tmp/install-enchant.sh
+RUN sh /tmp/install-enchant.sh
+RUN docker-php-ext-install -j$(nproc) enchant
+# PHP8.0 以下安装enchant1-结束
+
 # 安装编译需要的包
 RUN apk add gettext-dev
-
-# 1.0.2 增加 bcmath, calendar, exif, gettext, sockets, dba, mysqli, pcntl, pdo_mysql, shmop, sysvmsg, sysvsem, sysvshm 扩展
 RUN docker-php-ext-install -j$(nproc) bcmath calendar exif gettext sockets dba mysqli pcntl pdo_mysql shmop sysvmsg sysvsem sysvshm
 
 # 安装编译需要的包
 RUN apk add freetds-dev openldap-dev imap-dev bzip2-dev zlib-dev gd-dev gmp-dev krb5-dev libxml2-dev tidyhtml-dev libxslt-dev libzip-dev net-snmp-dev postgresql-dev aspell-dev
 
-# PHP8.0 以下安装enchant1-开始
-RUN apk add glib-dev hunspell-dev
-
-ADD ./downloads/enchant.tar.gz /tmp
-COPY ./downloads/install-enchant.sh /tmp/install-enchant.sh
-
-RUN sh /tmp/install-enchant.sh
-# PHP8.0 以下安装enchant1-结束
-
 RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
 docker-php-ext-configure pdo_dblib && \
 docker-php-ext-configure ldap && \
 docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
-docker-php-ext-install -j$(nproc) bz2 enchant gd gmp soap xmlrpc tidy xsl zip snmp pgsql pdo_pgsql pspell pdo_dblib ldap imap intl
-
-# 干掉pdo_firebird
-
-# 1.0.19 增加 mcrypt 扩展 （7.3以后已废除）
-# RUN apt-get update && \
-# apt-get install -y --no-install-recommends libmcrypt-dev && \
-# rm -r /var/lib/apt/lists/* && \
-# pecl install mcrypt-1.0.1 && \
-# docker-php-ext-enable mcrypt
+docker-php-ext-install -j$(nproc) bz2 gd gmp soap xmlrpc tidy xsl zip snmp pgsql pdo_pgsql pspell pdo_dblib ldap imap intl
 
 # imagick 扩展
 RUN export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" && \
