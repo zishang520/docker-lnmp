@@ -47,6 +47,7 @@ services:
   docker_mysql:
     container_name: docker_mysql
     image: mysql:5.7.35
+    tty: true
     restart: always
     expose:
       - "3306"
@@ -63,6 +64,7 @@ services:
   docker_redis:
     container_name: docker_redis
     image: redis:latest
+    tty: true
     restart: always
     expose:
       - "6379"
@@ -74,6 +76,7 @@ services:
   docker_mongo:
     container_name: docker_mongo
     image: mongo:latest
+    tty: true
     restart: always
     expose:
       - "27017"
