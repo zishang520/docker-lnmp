@@ -11,7 +11,7 @@
 -  **容器内Redis主机地址(host)**: `docker_redis`
 -  **容器内Mongo主机地址(host)**: `docker_mongo`
 
-其它查阅`docker-compose.yml`文件**docker_php:**部分
+其它查阅`docker-compose.yml`文件 **docker_php:** 部分
 
 #### Nginx
 >镜像：`nginx:stable-alpine`
@@ -21,7 +21,7 @@
 -  **conf** 目录为 `./nginx/conf`
 -  **容器内PHP主机地址(host)**: `docker_php`
 
-其它查阅`docker-compose.yml`文件**docker_nginx:**部分
+其它查阅`docker-compose.yml`文件 **docker_nginx:** 部分
 
 #### Mysql
 >镜像：`mysql:5.7.35`
@@ -33,7 +33,7 @@
 -  **排序规则(charset-collation)** 为 `utf8mb4_unicode_520_ci`
 -  <span style="color:#a50">root 密码请在 docker-compose 之前请先为`.env`中环境变量`MYSQL_ROOT_PASSWORD`设定值，默认为`root`</span>
 
-其它查阅`docker-compose.yml`文件**docker_mysql:**部分，<span style="color:#f56b7e">注意：数据库未开启外网访问权限，自己用ssh跳板吧</span>
+其它查阅`docker-compose.yml`文件 **docker_mysql:** 部分，<span style="color:#f56b7e">注意：数据库未开启外网访问权限，自己用ssh跳板吧</span>
 
 #### Mongo
 >镜像：`mongo:latest`
@@ -42,7 +42,7 @@
 -  <span style="color:#a50">root 用户名请在 docker-compose 之前请先为`.env`中环境变量`MONGO_INITDB_ROOT_USERNAME`设定值，默认为`root`</span>
 -  <span style="color:#a50">root 用户密码请在 docker-compose 之前请先为`.env`中环境变量`MONGO_INITDB_ROOT_PASSWORD`设定值，默认为`root`</span>
 
-其它查阅`docker-compose.yml`文件**docker_mongo:**部分，<span style="color:#f56b7e">注意：数据库未开启外网访问权限，自己用ssh跳板吧</span>
+其它查阅`docker-compose.yml`文件 **docker_mongo:** 部分，<span style="color:#f56b7e">注意：数据库未开启外网访问权限，自己用ssh跳板吧</span>
 
 #### Redis
 >镜像：`mongo:latest`
@@ -50,4 +50,4 @@
 -  **数据(data)** 目录为 `./redis/data`
 -  <span style="color:#a50">密码请在 docker-compose 之前请先为`.env`中环境变量`REDIS_PASSWORD`设定值，默认为`root`</span>
 
-其它查阅`docker-compose.yml`文件**docker_redis:**部分，<span style="color:#f56b7e">注意：数据库未开启外网访问权限，自己用ssh跳板吧</span>
+其它查阅`docker-compose.yml`文件 **docker_redis:** 部分，<span style="color:#f56b7e">注意：数据库未开启外网访问权限，自己用ssh跳板吧</span>
