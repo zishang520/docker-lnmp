@@ -32,7 +32,8 @@ RUN docker-php-ext-install -j$(nproc) bcmath calendar exif gettext sockets dba m
 RUN apk add freetds-dev openldap-dev imap-dev bzip2-dev zlib-dev gd-dev gmp-dev krb5-dev libxml2-dev tidyhtml-dev libxslt-dev libzip-dev net-snmp-dev postgresql-dev aspell-dev
 
 # PHP8.0 以下安装enchant1
-RUN apk add wget glib-dev hunspell-dev && wget https://github.com/AbiWord/enchant/releases/download/enchant-1-6-1/enchant-1.6.1.tar.gz -O /tmp/enchant.tgz && cd /tmp/ && tar -zxvf enchant.tgz && cd enchant-1.6.1 && ./configure --prefix=/usr && make -j$(nproc) && make install
+RUN apk add wget glib-dev hunspell-dev
+RUN wget https://github.com/AbiWord/enchant/releases/download/enchant-1-6-1/enchant-1.6.1.tar.gz -O /tmp/enchant.tgz && cd /tmp/ && tar -zxvf enchant.tgz && cd enchant-1.6.1 && ./configure --prefix=/usr && make -j$(nproc) && make install && cd ~
 
 RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
 docker-php-ext-configure pdo_dblib && \
