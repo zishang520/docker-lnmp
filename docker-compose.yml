@@ -4,6 +4,9 @@ services:
   docker_php:
     container_name: docker_php
     image: php
+    build:
+      context: .
+      dockerfile: php/Dockerfile
     tty: true
     restart: always
     expose:
@@ -89,4 +92,6 @@ services:
       MONGO_INITDB_ROOT_PASSWORD:
 volumes:
   php-fpm:
+    driver: "local"
   mysqld:
+    driver: "local"
