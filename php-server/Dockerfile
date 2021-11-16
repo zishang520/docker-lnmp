@@ -1,4 +1,4 @@
-FROM php:7.4-fpm-alpine
+FROM php:7.2-cli-alpine
 MAINTAINER None
 
 # Use the default production configuration
@@ -39,7 +39,7 @@ RUN docker-php-ext-install -j$(nproc) bcmath calendar exif gettext sockets dba m
 # 安装编译需要的包
 RUN apk add freetds-dev openldap-dev imap-dev bzip2-dev zlib-dev gd-dev gmp-dev krb5-dev libxml2-dev tidyhtml-dev libxslt-dev libzip-dev net-snmp-dev postgresql-dev libwebp-dev
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-webp-dir=/usr/include/ --with-png-dir=/usr/include/ --with-zlib-dir && \
 docker-php-ext-configure pdo_dblib && \
 docker-php-ext-configure ldap && \
 docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \

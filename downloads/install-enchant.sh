@@ -4,10 +4,7 @@ path() {
 }
 
 main(){
-    cd /tmp/enchant-1.6.1
-    ./configure --prefix=/usr
-    make -j$(nproc)
-    make install
+    cd /tmp/enchant-1.6.1 && ./configure --prefix=/usr && make -j$(nproc) && make install
     exit
 }
 path
