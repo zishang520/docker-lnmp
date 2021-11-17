@@ -1,11 +1,13 @@
-version: "3.3"
+version: "3.5"
 
 services:
   docker_php:
     container_name: docker_php
-    context: ./php
-    args:
-        - LNMP_PHP_VERSION=${PHP_VERSION}
+    build:
+      context: .
+      dockerfile: php/Dockerfile
+      args:
+          - LNMP_PHP_VERSION=${PHP_VERSION}
     tty: true
     restart: always
     expose:
@@ -29,7 +31,8 @@ services:
       - docker_mongo:docker_mongo
   php-worker:
     build:
-      context: ./php-worker
+      context: .
+      dockerfile: php-worker/Dockerfile
       args:
         - LNMP_PHP_VERSION=${PHP_VERSION}
     volumes:
