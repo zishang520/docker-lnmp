@@ -1,4 +1,6 @@
-FROM php:7.4-fpm-alpine
+ARG LNMP_PHP_VERSION
+FROM php:${LNMP_PHP_VERSION}-fpm-alpine
+
 MAINTAINER None
 
 # Use the default production configuration
@@ -22,15 +24,17 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # 修改源并更新包
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
 
-# PHP8.0 以下安装enchant1-开始
+# 安装enchant
 RUN apk add autoconf m4 make gcc g++ glib-dev hunspell-dev aspell-dev file
 ADD ./downloads/enchant.tar.gz /tmp
 COPY ./downloads/install-enchant.sh /tmp/install-enchant.sh
 RUN sed -i 's/\r//' /tmp/install-enchant.sh
-RUN sh /tmp/install-enchant.sh
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+  sh /tmp/install-enchant.sh && rm -rf /tmp/enchant-1.6.1 /tmp/install-enchant.sh; \
+  else \
+  apk add enchant2-dev; \
+  ;fi
 RUN docker-php-ext-install -j$(nproc) enchant
-RUN rm -rf /tmp/enchant-1.6.1 /tmp/install-enchant.sh
-# PHP8.0 以下安装enchant1-结束
 
 # 安装编译需要的包
 RUN apk add gettext-dev
@@ -67,3 +71,6 @@ RUN pecl install swoole-4.8.0 && docker-php-ext-enable swoole
 
 # Mongodb 扩展安装
 RUN pecl install mongodb && docker-php-ext-enable mongodb
+
+RUN rm /var/cache/apk/* \
+  && mkdir -p /www

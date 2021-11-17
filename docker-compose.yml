@@ -3,10 +3,9 @@ version: "3.3"
 services:
   docker_php:
     container_name: docker_php
-    image: php
-    build:
-      context: .
-      dockerfile: php/Dockerfile
+    context: ./php
+    args:
+        - LNMP_PHP_VERSION=${PHP_VERSION}
     tty: true
     restart: always
     expose:
@@ -15,11 +14,27 @@ services:
       - "127.0.0.1:9000:9000"
     working_dir: /www
     volumes:
-      - ./nginx/www:/www
-      - ./php/logs:/var/log/php-fpm
-      - ./php/php-fpm.d:/usr/local/etc/php-fpm.d
+      - ${DATA_PATH_HOST}/nginx/www:/www
+      - ${DATA_PATH_HOST}/php/logs:/var/log/php-fpm
+      - ${DATA_PATH_HOST}/php/php-fpm.d:/usr/local/etc/php-fpm.d
       - php-fpm:/var/run/php-fpm
       - mysqld:/var/run/mysqld
+    depends_on:
+      - docker_mysql
+      - docker_redis
+      - docker_mongo
+    links:
+      - docker_mysql:docker_mysql
+      - docker_redis:docker_redis
+      - docker_mongo:docker_mongo
+  php-worker:
+    build:
+      context: ./php-worker
+      args:
+        - LNMP_PHP_VERSION=${PHP_VERSION}
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
     depends_on:
       - docker_mysql
       - docker_redis
@@ -34,14 +49,14 @@ services:
     tty: true
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HOST_HTTP_PORT}:80"
+      - "${NGINX_HOST_HTTPS_PORT}:443"
     working_dir: /www
     volumes:
-      - ./nginx/www:/www
-      - ./nginx/logs:/var/log/nginx
-      - ./nginx/conf/conf.d:/etc/nginx/conf.d
-      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ${DATA_PATH_HOST}/nginx/www:/www
+      - ${DATA_PATH_HOST}/nginx/logs:/var/log/nginx
+      - ${DATA_PATH_HOST}/nginx/conf/conf.d:/etc/nginx/conf.d
+      - ${DATA_PATH_HOST}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
       - php-fpm:/var/run/php-fpm
     depends_on:
       - docker_php
@@ -49,20 +64,20 @@ services:
       - docker_php:docker_php
   docker_mysql:
     container_name: docker_mysql
-    image: mysql:5.7.35
+    image: mysql:${MYSQL_VERSION}
     tty: true
     restart: always
     expose:
       - "3306"
     ports:
-      - "127.0.0.1:3306:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
-      - ./mysql/conf.d:/etc/mysql/conf.d
-      - ./mysql/logs:/logs
-      - ./mysql/data:/var/lib/mysql
+      - ${DATA_PATH_HOST}/mysql/conf.d:/etc/mysql/conf.d
+      - ${DATA_PATH_HOST}/mysql/logs:/logs
+      - ${DATA_PATH_HOST}/mysql/data:/var/lib/mysql
       - mysqld:/var/run/mysqld
     environment:
-      MYSQL_ROOT_PASSWORD:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci
   docker_redis:
     container_name: docker_redis
@@ -72,9 +87,9 @@ services:
     expose:
       - "6379"
     ports:
-      - "127.0.0.1:6379:6379"
+      - "${REDIS_PORT}:3306"
     volumes:
-      - ./redis/data:/data
+      - ${DATA_PATH_HOST}/redis/data:/data
     command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
   docker_mongo:
     container_name: docker_mongo
@@ -84,14 +99,15 @@ services:
     expose:
       - "27017"
     ports:
-      - "127.0.0.1:27017:27017"
-    volumes:
-      - ./mongod/data:/data
+      - "${MONGODB_PORT}:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME:
-      MONGO_INITDB_ROOT_PASSWORD:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - ${DATA_PATH_HOST}/mongo:/data/db
+      - ${DATA_PATH_HOST}/mongo_config:/data/configdb
 volumes:
   php-fpm:
-    driver: "local"
+    driver: ${VOLUMES_DRIVER}
   mysqld:
-    driver: "local"
+    driver: ${VOLUMES_DRIVER}
