@@ -1,23 +1,9 @@
-#
-#--------------------------------------------------------------------------
-# Image Setup
-#--------------------------------------------------------------------------
-#
-
 ARG LNMP_PHP_VERSION
 FROM php:${LNMP_PHP_VERSION}-alpine
+MAINTAINER None
 
-LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
-
-ARG LNMP_PHP_VERSION
-
-# If you're in China, or you need to change sources, will be set CHANGE_SOURCE to true in .env.
-
-ARG CHANGE_SOURCE=false
-RUN if [ ${CHANGE_SOURCE} = true ]; then \
-  # Change application source from dl-cdn.alpinelinux.org to aliyun source
-  sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories \
-  ;fi
+# Change application source from dl-cdn.alpinelinux.org to aliyun source
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
 
 RUN apk --update add wget \
   curl \
@@ -36,33 +22,19 @@ RUN apk --update add wget \
   libressl-dev \
   supervisor
 
-
-RUN pecl channel-update pecl.php.net; \
+RUN set -eux; \
+  pecl channel-update pecl.php.net; \
   docker-php-ext-install mysqli mbstring pdo pdo_mysql tokenizer xml pcntl
-
-# Add a non-root user:
-ARG PUID=1000
-ENV PUID ${PUID}
-ARG PGID=1000
-ENV PGID ${PGID}
-
-RUN addgroup -g ${PGID} laradock && \
-  adduser -D -G laradock -u ${PUID} laradock
 
 #Install BZ2:
 ARG INSTALL_BZ2=false
-RUN if [ ${INSTALL_BZ2} = true ]; then \
-  apk --update add bzip2-dev; \
-  docker-php-ext-install bz2; \
-  fi
+RUN apk --update add bzip2-dev && docker-php-ext-install bz2
 
 ###########################################################################
 # PHP GnuPG:
 ###########################################################################
 
-ARG INSTALL_GNUPG=false
-
-RUN set -eux; if [ ${INSTALL_GNUPG} = true ]; then \
+RUN set -eux; \
   apk add --no-cache --no-progress --virtual BUILD_DEPS_PHP_GNUPG gpgme-dev; \
   apk add --no-cache --no-progress gpgme; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
@@ -70,35 +42,28 @@ RUN set -eux; if [ ${INSTALL_GNUPG} = true ]; then \
   else \
   pecl install gnupg; \
   fi; \
-  docker-php-ext-enable gnupg; \
-  fi
+  docker-php-ext-enable gnupg;
 
 #Install LDAP
-ARG INSTALL_LDAP=false;
-RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
+RUN set -eux; \
   apk add --no-cache --no-progress openldap-dev; \
   docker-php-ext-install ldap; \
-  php -m | grep -oiE '^ldap$'; \
-  fi
+  php -m | grep -oiE '^ldap$';
 
 #Install GD package:
-ARG INSTALL_GD=false
-RUN if [ ${INSTALL_GD} = true ]; then \
+RUN set -eux; \
   apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]; then \
   docker-php-ext-configure gd --with-freetype --with-jpeg --with-png; \
   else \
   docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/; \
   fi; \
-  docker-php-ext-install gd \
-  ;fi
+  docker-php-ext-install gd;
 
 #Install ImageMagick:
-ARG INSTALL_IMAGEMAGICK=false
 ARG IMAGEMAGICK_VERSION=latest
 ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
 RUN set -eux; \
-  if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
   apk add --update --no-cache imagemagick-dev imagemagick; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   cd /tmp && \
@@ -117,32 +82,20 @@ RUN set -eux; \
   pecl install imagick; \
   fi && \
   docker-php-ext-enable imagick; \
-  php -m | grep -q 'imagick'; \
-  fi
+  php -m | grep -q 'imagick';
 
 #Install GMP package:
-ARG INSTALL_GMP=false
-RUN if [ ${INSTALL_GMP} = true ]; then \
-  apk add --update --no-cache gmp gmp-dev \
-  && docker-php-ext-install gmp \
-  ;fi
+RUN apk add --update --no-cache gmp gmp-dev \
+  && docker-php-ext-install gmp
 
 #Install BCMath package:
-ARG INSTALL_BCMATH=false
-RUN if [ ${INSTALL_BCMATH} = true ]; then \
-  docker-php-ext-install bcmath \
-  ;fi
+RUN docker-php-ext-install bcmath
 
 #Install SOAP package:
-ARG INSTALL_SOAP=false
-RUN if [ ${INSTALL_SOAP} = true ]; then \
-  docker-php-ext-install soap \
-  ;fi
+RUN docker-php-ext-install soap
 
 # Install MongoDB drivers:
-ARG INSTALL_MONGO=false
-RUN if [ ${INSTALL_MONGO} = true ]; then \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
       pecl install mongo; \
       docker-php-ext-enable mongo; \
       php -m | grep -oiE '^mongo$'; \
@@ -154,8 +107,7 @@ RUN if [ ${INSTALL_MONGO} = true ]; then \
       fi; \
       docker-php-ext-enable mongodb; \
       php -m | grep -oiE '^mongodb$'; \
-    fi; \
-  fi
+    fi
 
 ###########################################################################
 # PHP OCI8:
@@ -199,16 +151,11 @@ RUN if [ ${INSTALL_OCI8} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") = "7"
   ;fi
 
 # Install PostgreSQL drivers:
-ARG INSTALL_PGSQL=false
-RUN if [ ${INSTALL_PGSQL} = true ]; then \
-  apk --update add postgresql-dev \
-  && docker-php-ext-install pdo_pgsql \
-  ;fi
+RUN apk --update add postgresql-dev \
+  && docker-php-ext-install pdo_pgsql
 
 # Install ZipArchive:
-ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
-  if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
   apk --update add libzip-dev && \
   if [ ${LNMP_PHP_VERSION} = "7.3" ] || [ ${LNMP_PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-configure zip; \
@@ -216,14 +163,10 @@ RUN set -eux; \
   docker-php-ext-configure zip --with-libzip; \
   fi && \
   # Install the zip extension
-  docker-php-ext-install zip \
-  ;fi
+  docker-php-ext-install zip
 
 # Install MySQL Client:
-ARG INSTALL_MYSQL_CLIENT=false
-RUN if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
-  apk --update add mysql-client \
-  ;fi
+RUN apk --update add mysql-client
 
 # Install FFMPEG:
 ARG INSTALL_FFMPEG=false
@@ -333,29 +276,22 @@ RUN if [ $INSTALL_GHOSTSCRIPT = true ]; then \
   ;fi
 
 # Install Redis package:
-ARG INSTALL_REDIS=false
-RUN if [ ${INSTALL_REDIS} = true ]; then \
-  # Install Redis Extension
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   printf "\n" | pecl install -o -f redis-4.3.0; \
   else \
   printf "\n" | pecl install -o -f redis; \
   fi; \
   rm -rf /tmp/pear; \
-  docker-php-ext-enable redis \
-  ;fi
+  docker-php-ext-enable redis
 
 # Install enchant package
-RUN apk add autoconf m4 make gcc g++ glib-dev hunspell-dev aspell-dev file
-ADD ./downloads/enchant.tar.gz /tmp
-COPY ./downloads/install-enchant.sh /tmp/install-enchant.sh
-RUN sed -i 's/\r//' /tmp/install-enchant.sh
 RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  sh /tmp/install-enchant.sh && rm -rf /tmp/enchant-1.6.1 /tmp/install-enchant.sh; \
+  apk --update add php7-enchant && \
+  sh -c 'echo "extension=/usr/lib/php7/modules/enchant.so" > /usr/local/etc/php/conf.d/enchant.ini' \
   else \
   apk add enchant2-dev; \
+  docker-php-ext-install -j$(nproc) enchant; \
   ;fi
-RUN docker-php-ext-install -j$(nproc) enchant
 
 ###########################################################################
 # Swoole EXTENSION
@@ -364,7 +300,6 @@ RUN docker-php-ext-install -j$(nproc) enchant
 ARG INSTALL_SWOOLE=false
 
 RUN set -eux; \
-  if [ ${INSTALL_SWOOLE} = true ]; then \
     # Install Php Swoole Extension
     if   [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ]; then \
       pecl install swoole-2.0.10; \
@@ -376,8 +311,7 @@ RUN set -eux; \
       pecl install swoole; \
     fi; \
     docker-php-ext-enable swoole; \
-    php -m | grep -oiE '^swoole$'; \
-  fi
+    php -m | grep -oiE '^swoole$';
 
 ###########################################################################
 # Taint EXTENSION
@@ -400,38 +334,27 @@ RUN if [ ${INSTALL_TAINT} = true ]; then \
 # Imap EXTENSION
 ###########################################################################
 
-ARG INSTALL_IMAP=false
-
-RUN if [ ${INSTALL_IMAP} = true ]; then \
-  apk add --update imap-dev && \
+RUN apk add --update imap-dev && \
   docker-php-ext-configure imap --with-imap --with-imap-ssl && \
-  docker-php-ext-install imap \
-  ;fi
+  docker-php-ext-install imap
 
 ###########################################################################
 # XMLRPC:
 ###########################################################################
 
-ARG INSTALL_XMLRPC=false
-
-RUN if [ ${INSTALL_XMLRPC} = true ]; then \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   pecl install xmlrpc-1.0.0RC2; \
   docker-php-ext-enable xmlrpc; \
   else \
   docker-php-ext-install xmlrpc; \
   fi; \
-  php -m | grep -r 'xmlrpc'; \
-  fi
+  php -m | grep -r 'xmlrpc'
 
 ###########################################################################
 # PHP Memcached:
 ###########################################################################
 
-ARG INSTALL_MEMCACHED=false
-
-RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
-  apk --update add libmemcached-dev; \
+RUN apk --update add libmemcached-dev; \
   # Install the php memcached extension
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   pecl install memcached-2.2.0; \
@@ -439,8 +362,7 @@ RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
   pecl install memcached; \
   fi; \
   docker-php-ext-enable memcached; \
-  php -m | grep -r 'memcached'; \
-  fi
+  php -m | grep -r 'memcached'
 
 ###########################################################################
 # SQL SERVER:
