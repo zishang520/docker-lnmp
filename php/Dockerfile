@@ -24,53 +24,131 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # 修改源并更新包
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
 
-# 安装enchant
-RUN apk add autoconf m4 make gcc g++ glib-dev hunspell-dev aspell-dev file
-ADD ./downloads/enchant.tar.gz /tmp
-COPY ./downloads/install-enchant.sh /tmp/install-enchant.sh
-RUN sed -i 's/\r//' /tmp/install-enchant.sh
+RUN apk --update add wget \
+  curl \
+  build-base \
+  libmcrypt-dev \
+  libxml2-dev \
+  linux-headers \
+  pcre-dev \
+  zlib-dev \
+  autoconf \
+  cyrus-sasl-dev \
+  libgsasl-dev \
+  oniguruma-dev \
+  libressl \
+  libressl-dev
+
+RUN set -eux; \
+  pecl channel-update pecl.php.net
+
+# Install enchant package
 RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  sh /tmp/install-enchant.sh && rm -rf /tmp/enchant-1.6.1 /tmp/install-enchant.sh; \
+  apk --update add php7-enchant && \
+  sh -c 'echo "extension=/usr/lib/php7/modules/enchant.so" > /usr/local/etc/php/conf.d/enchant.ini' \
   else \
   apk add enchant2-dev; \
+  docker-php-ext-install -j$(nproc) enchant; \
   ;fi
-RUN docker-php-ext-install -j$(nproc) enchant
 
 # 安装编译需要的包
 RUN apk add gettext-dev
 RUN docker-php-ext-install -j$(nproc) bcmath calendar exif gettext sockets dba mysqli pcntl pdo_mysql shmop sysvmsg sysvsem sysvshm
 
 # 安装编译需要的包
-RUN apk add freetds-dev openldap-dev imap-dev bzip2-dev zlib-dev gd-dev gmp-dev krb5-dev libxml2-dev tidyhtml-dev libxslt-dev libzip-dev net-snmp-dev postgresql-dev libwebp-dev
+RUN apk add freetds-dev openldap-dev imap-dev bzip2-dev zlib-dev gmp-dev krb5-dev libxml2-dev tidyhtml-dev libxslt-dev libzip-dev net-snmp-dev postgresql-dev hunspell-dev aspell-dev
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
-docker-php-ext-configure pdo_dblib && \
+RUN docker-php-ext-configure pdo_dblib && \
 docker-php-ext-configure ldap && \
 docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
-docker-php-ext-install -j$(nproc) bz2 gd gmp soap xmlrpc tidy xsl zip snmp pgsql pdo_pgsql pspell pdo_dblib ldap imap intl
+docker-php-ext-install -j$(nproc) bz2 gmp soap xmlrpc tidy xsl zip snmp pgsql pdo_pgsql pspell pdo_dblib ldap imap intl
+
+# gd 扩展
+RUN set -eux; \
+  apk add --update --no-cache gd-dev freetype-dev libwebp-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]; then \
+  docker-php-ext-configure gd --with-freetype --with-jpeg --with-png  --with-webp; \
+  else \
+  docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/ --with-webp-dir=/usr/lib/; \
+  fi; \
+  docker-php-ext-install gd
 
 # imagick 扩展
-RUN export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" && \
-apk add imagemagick-dev && \
-pecl install imagick-3.5.1 && \
-docker-php-ext-enable imagick
+ARG IMAGEMAGICK_VERSION=latest
+ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
+RUN set -eux; \
+  apk add --update --no-cache imagemagick-dev imagemagick; \
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+  cd /tmp && \
+  if [ ${IMAGEMAGICK_VERSION} = "latest" ]; then \
+  git clone https://github.com/Imagick/imagick; \
+  else \
+  git clone --branch ${IMAGEMAGICK_VERSION} https://github.com/Imagick/imagick; \
+  fi && \
+  cd imagick && \
+  phpize && \
+  ./configure && \
+  make && \
+  make install && \
+  rm -r /tmp/imagick; \
+  else \
+  pecl install imagick; \
+  fi && \
+  docker-php-ext-enable imagick; \
+  php -m | grep -q 'imagick'
 
 # 增加 Memcached 扩展
-RUN apk add libmemcached-dev && \
-pecl install memcached && \
-docker-php-ext-enable memcached
+RUN apk --update add libmemcached-dev; \
+  # Install the php memcached extension
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+  pecl install memcached-2.2.0; \
+  else \
+  pecl install memcached; \
+  fi; \
+  docker-php-ext-enable memcached; \
+  php -m | grep -r 'memcached'
 
 # redis 扩展
-RUN pecl install redis-5.3.4 && docker-php-ext-enable redis
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+  printf "\n" | pecl install -o -f redis-4.3.0; \
+  else \
+  printf "\n" | pecl install -o -f redis; \
+  fi; \
+  rm -rf /tmp/pear; \
+  docker-php-ext-enable redis
 
 # 增加 opcache 扩展
 RUN docker-php-ext-configure opcache --enable-opcache && docker-php-ext-install opcache
 
 # Swoole 扩展安装 开启扩展
-RUN pecl install swoole-4.8.0 && docker-php-ext-enable swoole
+RUN set -eux; \
+    # Install Php Swoole Extension
+    if   [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ]; then \
+      pecl install swoole-2.0.10; \
+    elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
+      pecl install swoole-4.3.5; \
+    elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
+      pecl install swoole-4.5.11; \
+    else \
+      pecl install swoole; \
+    fi; \
+    docker-php-ext-enable swoole; \
+    php -m | grep -oiE '^swoole$';
 
 # Mongodb 扩展安装
-RUN pecl install mongodb && docker-php-ext-enable mongodb
+RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+      pecl install mongo; \
+      docker-php-ext-enable mongo; \
+      php -m | grep -oiE '^mongo$'; \
+    else \
+      if [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
+        pecl install mongodb-1.9.2; \
+      else \
+        pecl install mongodb; \
+      fi; \
+      docker-php-ext-enable mongodb; \
+      php -m | grep -oiE '^mongodb$'; \
+    fi
 
 RUN rm /var/cache/apk/* \
   && mkdir -p /www

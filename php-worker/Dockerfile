@@ -1,6 +1,14 @@
 ARG LNMP_PHP_VERSION
-FROM php:${LNMP_PHP_VERSION}-alpine
+FROM php:${LNMP_PHP_VERSION}-cli-alpine
 MAINTAINER None
+
+# Use the default production configuration
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# 设置环境变量
+ENV LANG=C.UTF-8
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
@@ -20,14 +28,15 @@ RUN apk --update add wget \
   oniguruma-dev \
   libressl \
   libressl-dev \
+  gettext-dev \
   supervisor
 
 RUN set -eux; \
   pecl channel-update pecl.php.net; \
-  docker-php-ext-install mysqli mbstring pdo pdo_mysql tokenizer xml pcntl
+  docker-php-ext-install mysqli mbstring pdo pdo_mysql tokenizer xml pcntl \
+  calendar exif gettext sockets dba shmop sysvmsg sysvsem sysvshm intl
 
 #Install BZ2:
-ARG INSTALL_BZ2=false
 RUN apk --update add bzip2-dev && docker-php-ext-install bz2
 
 ###########################################################################
@@ -42,13 +51,13 @@ RUN set -eux; \
   else \
   pecl install gnupg; \
   fi; \
-  docker-php-ext-enable gnupg;
+  docker-php-ext-enable gnupg
 
 #Install LDAP
 RUN set -eux; \
   apk add --no-cache --no-progress openldap-dev; \
   docker-php-ext-install ldap; \
-  php -m | grep -oiE '^ldap$';
+  php -m | grep -oiE '^ldap$'
 
 #Install GD package:
 RUN set -eux; \
@@ -58,7 +67,7 @@ RUN set -eux; \
   else \
   docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/; \
   fi; \
-  docker-php-ext-install gd;
+  docker-php-ext-install gd
 
 #Install ImageMagick:
 ARG IMAGEMAGICK_VERSION=latest
@@ -82,7 +91,7 @@ RUN set -eux; \
   pecl install imagick; \
   fi && \
   docker-php-ext-enable imagick; \
-  php -m | grep -q 'imagick';
+  php -m | grep -q 'imagick'
 
 #Install GMP package:
 RUN apk add --update --no-cache gmp gmp-dev \
@@ -293,11 +302,12 @@ RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-install -j$(nproc) enchant; \
   ;fi
 
+# Install opcache package
+# RUN docker-php-ext-configure opcache --enable-opcache && docker-php-ext-install opcache
+
 ###########################################################################
 # Swoole EXTENSION
 ###########################################################################
-
-ARG INSTALL_SWOOLE=false
 
 RUN set -eux; \
     # Install Php Swoole Extension
