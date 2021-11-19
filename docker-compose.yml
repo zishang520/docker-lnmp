@@ -7,10 +7,10 @@ services:
       context: ./php
       dockerfile: Dockerfile
       args:
-          - LNMP_PHP_VERSION=${PHP_VERSION}
-          - http_proxy
-          - https_proxy
-          - no_proxy
+        - LNMP_PHP_VERSION=${PHP_VERSION}
+        - http_proxy
+        - https_proxy
+        - no_proxy
     tty: true
     restart: always
     expose:
@@ -107,7 +107,7 @@ services:
     expose:
       - "6379"
     ports:
-      - "${REDIS_PORT}:3306"
+      - "${REDIS_PORT}:6379"
     volumes:
       - ${DATA_PATH_HOST}/redis/data:/data
     command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
@@ -124,8 +124,8 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     volumes:
-      - ${DATA_PATH_HOST}/mongo:/data/db
-      - ${DATA_PATH_HOST}/mongo_config:/data/configdb
+      - ${DATA_PATH_HOST}/mongod/db:/data/db
+      - ${DATA_PATH_HOST}/mongod/configdb:/data/configdb
 volumes:
   php-fpm:
     driver: ${VOLUMES_DRIVER}
