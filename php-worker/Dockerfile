@@ -2,6 +2,8 @@ ARG LNMP_PHP_VERSION
 FROM php:${LNMP_PHP_VERSION}-cli-alpine
 MAINTAINER None
 
+ARG LNMP_PHP_VERSION
+
 # Use the default production configuration
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
@@ -11,7 +13,7 @@ ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
+RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
 
 RUN apk --update add wget \
   curl \
@@ -29,6 +31,7 @@ RUN apk --update add wget \
   libressl \
   libressl-dev \
   gettext-dev \
+  icu-dev \
   supervisor
 
 RUN set -eux; \

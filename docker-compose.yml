@@ -29,23 +29,23 @@ services:
       - docker_mysql:docker_mysql
       - docker_redis:docker_redis
       - docker_mongo:docker_mongo
-  # php-worker:
-  #   build:
-  #     context: .
-  #     dockerfile: php-worker/Dockerfile
-  #     args:
-  #       - LNMP_PHP_VERSION=${PHP_VERSION}
-  #   volumes:
-  #     - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
-  #     - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
-  #   depends_on:
-  #     - docker_mysql
-  #     - docker_redis
-  #     - docker_mongo
-  #   links:
-  #     - docker_mysql:docker_mysql
-  #     - docker_redis:docker_redis
-  #     - docker_mongo:docker_mongo
+  php-worker:
+    build:
+      context: .
+      dockerfile: php-worker/Dockerfile
+      args:
+        - LNMP_PHP_VERSION=${PHP_VERSION}
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+      - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
+    depends_on:
+      - docker_mysql
+      - docker_redis
+      - docker_mongo
+    links:
+      - docker_mysql:docker_mysql
+      - docker_redis:docker_redis
+      - docker_mongo:docker_mongo
   docker_nginx:
     container_name: docker_nginx
     image: nginx:stable-alpine
