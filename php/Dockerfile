@@ -45,15 +45,6 @@ RUN apk --update add wget \
 RUN set -eux; \
   pecl channel-update pecl.php.net
 
-# Install enchant package
-RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  apk --update add php7-enchant && \
-  sh -c 'echo "extension=/usr/lib/php7/modules/enchant.so" > /usr/local/etc/php/conf.d/enchant.ini' \
-  else \
-  apk add enchant2-dev; \
-  docker-php-ext-install -j$(nproc) enchant; \
-  ;fi
-
 # 安装编译需要的包
 RUN apk add gettext-dev
 RUN docker-php-ext-install -j$(nproc) bcmath calendar exif gettext sockets dba mysqli pcntl pdo_mysql shmop sysvmsg sysvsem sysvshm
@@ -153,5 +144,6 @@ RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
       php -m | grep -oiE '^mongodb$'; \
     fi
 
+ARG APP_CODE_PATH_CONTAINER=/var/www
 RUN rm /var/cache/apk/* \
-  && mkdir -p /www
+  && mkdir -p ${APP_CODE_PATH_CONTAINER}

@@ -296,15 +296,6 @@ RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   rm -rf /tmp/pear; \
   docker-php-ext-enable redis
 
-# Install enchant package
-RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  apk --update add php7-enchant && \
-  sh -c 'echo "extension=/usr/lib/php7/modules/enchant.so" > /usr/local/etc/php/conf.d/enchant.ini' \
-  else \
-  apk add enchant2-dev; \
-  docker-php-ext-install -j$(nproc) enchant; \
-  ;fi
-
 # Install opcache package
 # RUN docker-php-ext-configure opcache --enable-opcache && docker-php-ext-install opcache
 
