@@ -8,13 +8,16 @@ services:
       dockerfile: Dockerfile
       args:
           - LNMP_PHP_VERSION=${PHP_VERSION}
+          - http_proxy
+          - https_proxy
+          - no_proxy
     tty: true
     restart: always
     expose:
       - "9000"
     ports:
       - "127.0.0.1:9000:9000"
-    working_dir: /www
+    working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ${DATA_PATH_HOST}/php/logs:/var/log/php-fpm
@@ -36,6 +39,12 @@ services:
       dockerfile: Dockerfile
       args:
         - LNMP_PHP_VERSION=${PHP_VERSION}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    tty: true
+    restart: always
+    working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
@@ -49,18 +58,25 @@ services:
       - docker_mongo:docker_mongo
   docker_nginx:
     container_name: docker_nginx
-    image: nginx:stable-alpine
+    build:
+      context: ./nginx
+      args:
+        - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
+        - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
+        - http_proxy
+        - https_proxy
+        - no_proxy
     tty: true
     restart: always
     ports:
       - "${NGINX_HOST_HTTP_PORT}:80"
       - "${NGINX_HOST_HTTPS_PORT}:443"
-    working_dir: /www
+    working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
-      - ${DATA_PATH_HOST}/nginx/logs:/var/log/nginx
-      - ${DATA_PATH_HOST}/nginx/conf/conf.d:/etc/nginx/conf.d
-      - ${DATA_PATH_HOST}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+      - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+      - ${NGINX_SSL_PATH}:/etc/nginx/ssl
       - php-fpm:/var/run/php-fpm
     depends_on:
       - docker_php
