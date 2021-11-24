@@ -60,6 +60,7 @@ services:
     container_name: docker_nginx
     build:
       context: ./nginx
+      dockerfile: Dockerfile
       args:
         - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
         - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
@@ -126,6 +127,18 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/mongod/db:/data/db
       - ${DATA_PATH_HOST}/mongod/configdb:/data/configdb
+  laravel-echo-server:
+    build:
+      context: ./laravel-echo-server
+      dockerfile: Dockerfile
+    volumes:
+      - ${DATA_PATH_HOST}/laravel-echo-server/laravel-echo-server.json:/usr/src/app/laravel-echo-server.json:ro
+    ports:
+      - "${LARAVEL_ECHO_SERVER_PORT}:6001"
+    depends_on:
+      - docker_redis
+    links:
+      - docker_redis:docker_redis
 volumes:
   php-fpm:
     driver: ${VOLUMES_DRIVER}
