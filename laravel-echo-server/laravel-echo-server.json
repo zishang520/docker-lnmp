@@ -7,9 +7,6 @@
         "redis": {
             "host": "docker_redis",
             "port": "6379",
-            "password": null,
-            "keyPrefix": "laravel_database_",
-            "db": 0
         }
     },
     "devMode": true,
