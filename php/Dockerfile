@@ -61,7 +61,7 @@ docker-php-ext-install -j$(nproc) bz2 gmp soap xmlrpc tidy xsl zip snmp pgsql pd
 RUN set -eux; \
   apk add --update --no-cache gd-dev freetype-dev libwebp-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]; then \
-  docker-php-ext-configure gd --with-freetype --with-jpeg --with-png  --with-webp; \
+  docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
   else \
   docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/ --with-webp-dir=/usr/lib/; \
   fi; \
