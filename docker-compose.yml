@@ -29,10 +29,10 @@ services:
       - docker_redis
       - docker_mongo
     links:
-      - docker_mysql:docker_mysql
-      - docker_redis:docker_redis
-      - docker_mongo:docker_mongo
-  php-worker:
+      - thyz_mysql:docker_mysql
+      - thyz_redis:docker_redis
+      - thyz_mongo:docker_mongo
+  docker_php_worker:
     container_name: docker_php-worker
     build:
       context: ./php-worker
@@ -48,14 +48,16 @@ services:
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
+        php-fpm:/var/run/php-fpm
+      - mysqld:/var/run/mysqld
     depends_on:
       - docker_mysql
       - docker_redis
       - docker_mongo
     links:
-      - docker_mysql:docker_mysql
-      - docker_redis:docker_redis
-      - docker_mongo:docker_mongo
+      - thyz_mysql:docker_mysql
+      - thyz_redis:docker_redis
+      - thyz_mongo:docker_mongo
   docker_nginx:
     container_name: docker_nginx
     build:
@@ -81,8 +83,10 @@ services:
       - php-fpm:/var/run/php-fpm
     depends_on:
       - docker_php
+      - docker_laravel_echo_server
     links:
-      - docker_php:docker_php
+      - thyz_php:docker_php
+      - thyz_laravel_echo_server:docker_laravel_echo_server
   docker_mysql:
     container_name: docker_mysql
     image: mysql:${MYSQL_VERSION}
@@ -127,10 +131,12 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/mongod/db:/data/db
       - ${DATA_PATH_HOST}/mongod/configdb:/data/configdb
-  laravel-echo-server:
+  docker_laravel_echo_server:
     build:
       context: ./laravel-echo-server
       dockerfile: Dockerfile
+    tty: true
+    restart: always
     volumes:
       - ${DATA_PATH_HOST}/laravel-echo-server/laravel-echo-server.json:/usr/src/app/laravel-echo-server.json:ro
     ports:
@@ -138,7 +144,7 @@ services:
     depends_on:
       - docker_redis
     links:
-      - docker_redis:docker_redis
+      - thyz_redis:docker_redis
 volumes:
   php-fpm:
     driver: ${VOLUMES_DRIVER}
