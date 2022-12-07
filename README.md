@@ -4,7 +4,7 @@
 >镜像：`php:7.4-fpm-alpine`
 
 -  扩展支持 enchant bcmath calendar exif gettext sockets dba mysqli pcntl pdo_mysql shmop sysvmsg sysvsem sysvshm bz2 gd gmp soap xmlrpc tidy xsl zip snmp pgsql pdo_pgsql pspell pdo_dblib ldap imap intl imagick memcached redis opcache swoole mongodb 扩展
--  **wwwroot** 目录为 `./nginx/www`
+-  **wwwroot** 目录为 `./www`
 -  **logs** 目录为 `./php/logs`
 -  **php-fpm.d** 目录为 `./php/php-fpm.d`
 -  **容器内Mysql主机地址(host)**: `docker_mysql`
@@ -16,7 +16,7 @@
 #### Nginx
 >镜像：`nginx:stable-alpine`
 
--  **wwwroot** 目录为 `./nginx/www`
+-  **wwwroot** 目录为 `./www`
 -  **logs** 目录为 `./nginx/logs`
 -  **conf** 目录为 `./nginx/conf`
 -  **容器内PHP主机地址(host)**: `docker_php`
