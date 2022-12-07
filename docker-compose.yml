@@ -29,11 +29,11 @@ services:
       - docker_redis
       - docker_mongo
     links:
-      - thyz_mysql:docker_mysql
-      - thyz_redis:docker_redis
-      - thyz_mongo:docker_mongo
+      - docker_mysql:thyz_mysql
+      - docker_redis:thyz_redis
+      - docker_mongo:thyz_mongo
   docker_php_worker:
-    container_name: docker_php-worker
+    container_name: docker_php_worker
     build:
       context: ./php-worker
       dockerfile: Dockerfile
@@ -55,9 +55,9 @@ services:
       - docker_redis
       - docker_mongo
     links:
-      - thyz_mysql:docker_mysql
-      - thyz_redis:docker_redis
-      - thyz_mongo:docker_mongo
+      - docker_mysql:thyz_mysql
+      - docker_redis:thyz_redis
+      - docker_mongo:thyz_mongo
   docker_nginx:
     container_name: docker_nginx
     build:
@@ -85,8 +85,8 @@ services:
       - docker_php
       - docker_laravel_echo_server
     links:
-      - thyz_php:docker_php
-      - thyz_laravel_echo_server:docker_laravel_echo_server
+      - docker_php:thyz_php
+      - docker_laravel_echo_server:thyz_laravel_echo_server
   docker_mysql:
     container_name: docker_mysql
     image: mysql:${MYSQL_VERSION}
@@ -115,7 +115,7 @@ services:
       - "${REDIS_PORT}:6379"
     volumes:
       - ${DATA_PATH_HOST}/redis/data:/data
-    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
+    command: --requirepass ${REDIS_PASSWORD}
   docker_mongo:
     container_name: docker_mongo
     image: mongo:latest
@@ -132,6 +132,7 @@ services:
       - ${DATA_PATH_HOST}/mongod/db:/data/db
       - ${DATA_PATH_HOST}/mongod/configdb:/data/configdb
   docker_laravel_echo_server:
+    container_name: docker_laravel_echo_server
     build:
       context: ./laravel-echo-server
       dockerfile: Dockerfile
@@ -144,7 +145,7 @@ services:
     depends_on:
       - docker_redis
     links:
-      - thyz_redis:docker_redis
+      - docker_redis:thyz_redis
 volumes:
   php-fpm:
     driver: ${VOLUMES_DRIVER}
