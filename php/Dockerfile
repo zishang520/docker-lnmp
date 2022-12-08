@@ -60,8 +60,13 @@ docker-php-ext-install -j$(nproc) bz2 gmp soap xmlrpc tidy xsl zip snmp pgsql pd
 # gd 扩展
 RUN set -eux; \
   apk add --update --no-cache gd-dev freetype-dev libwebp-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]; then \
-  docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] || [[ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]]; then \
+  docker-php-ext-configure gd \
+            --prefix=/usr \
+            --with-jpeg \
+            --with-webp \
+            --with-xpm \
+            --with-freetype; \
   else \
   docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/ --with-webp-dir=/usr/lib/; \
   fi; \
@@ -145,5 +150,9 @@ RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
     fi
 
 ARG APP_CODE_PATH_CONTAINER=/var/www
-RUN rm /var/cache/apk/* \
-  && mkdir -p ${APP_CODE_PATH_CONTAINER}
+# Clean up
+RUN apk clean && \
+    rm -rf /var/cache/apk/* /tmp/* /var/tmp/* && \
+    rm /var/log/lastlog /var/log/faillog
+
+RUN mkdir -p ${APP_CODE_PATH_CONTAINER}

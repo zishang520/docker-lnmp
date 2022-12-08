@@ -2,18 +2,15 @@ ARG LNMP_PHP_VERSION
 FROM php:${LNMP_PHP_VERSION}-cli-alpine
 MAINTAINER None
 
-ARG LNMP_PHP_VERSION
-
-# Use the default production configuration
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
-# 设置环境变量
 ENV LANG=C.UTF-8
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Use the default production configuration
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
-RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk update && apk upgrade
+RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
 
 RUN apk --update add wget \
   curl \
@@ -34,48 +31,61 @@ RUN apk --update add wget \
   icu-dev \
   supervisor
 
-RUN set -eux; \
-  pecl channel-update pecl.php.net; \
-  docker-php-ext-install mysqli mbstring pdo pdo_mysql tokenizer xml pcntl \
-  calendar exif gettext sockets dba shmop sysvmsg sysvsem sysvshm intl
+
+RUN pecl channel-update pecl.php.net; \
+  docker-php-ext-install mysqli mbstring pdo pdo_mysql xml pcntl; \
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ]; then \
+    php -m | grep -q 'tokenizer'; \
+  else \
+    docker-php-ext-install tokenizer; \
+  fi
 
 #Install BZ2:
-RUN apk --update add bzip2-dev && docker-php-ext-install bz2
+ARG INSTALL_BZ2=true
+RUN if [ ${INSTALL_BZ2} = true ]; then \
+  apk --update add bzip2-dev; \
+  docker-php-ext-install bz2; \
+  fi
 
 ###########################################################################
 # PHP GnuPG:
 ###########################################################################
 
-RUN set -eux; \
+ARG INSTALL_GNUPG=false
+
+RUN set -eux; if [ ${INSTALL_GNUPG} = true ]; then \
   apk add --no-cache --no-progress --virtual BUILD_DEPS_PHP_GNUPG gpgme-dev; \
   apk add --no-cache --no-progress gpgme; \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  pecl install gnupg-1.5.0RC2; \
-  else \
   pecl install gnupg; \
-  fi; \
-  docker-php-ext-enable gnupg
+  docker-php-ext-enable gnupg; \
+  fi
 
 #Install LDAP
-RUN set -eux; \
+ARG INSTALL_LDAP=false;
+RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
   apk add --no-cache --no-progress openldap-dev; \
   docker-php-ext-install ldap; \
-  php -m | grep -oiE '^ldap$'
+  php -m | grep -oiE '^ldap$'; \
+  fi
 
 #Install GD package:
-RUN set -eux; \
+ARG INSTALL_GD=true
+RUN if [ ${INSTALL_GD} = true ]; then \
   apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]; then \
-  docker-php-ext-configure gd --with-freetype --with-jpeg --with-png; \
+  docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm  --with-png; \
   else \
-  docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/; \
+  docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/ --with-webp-dir=/usr/lib/ --with-xpm-dir=/usr/lib/ ; \
   fi; \
-  docker-php-ext-install gd
+  docker-php-ext-install gd \
+  ;fi
 
 #Install ImageMagick:
+ARG INSTALL_IMAGEMAGICK=true
 ARG IMAGEMAGICK_VERSION=latest
 ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
 RUN set -eux; \
+  if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
   apk add --update --no-cache imagemagick-dev imagemagick; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   cd /tmp && \
@@ -94,32 +104,45 @@ RUN set -eux; \
   pecl install imagick; \
   fi && \
   docker-php-ext-enable imagick; \
-  php -m | grep -q 'imagick'
+  php -m | grep -q 'imagick'; \
+  fi
 
 #Install GMP package:
-RUN apk add --update --no-cache gmp gmp-dev \
-  && docker-php-ext-install gmp
+ARG INSTALL_GMP=false
+RUN if [ ${INSTALL_GMP} = true ]; then \
+  apk add --update --no-cache gmp gmp-dev \
+  && docker-php-ext-install gmp \
+  ;fi
 
 #Install BCMath package:
-RUN docker-php-ext-install bcmath
+ARG INSTALL_BCMATH=true
+RUN if [ ${INSTALL_BCMATH} = true ]; then \
+  docker-php-ext-install bcmath \
+  ;fi
 
 #Install SOAP package:
-RUN docker-php-ext-install soap
+ARG INSTALL_SOAP=false
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+  docker-php-ext-install soap \
+  ;fi
 
 # Install MongoDB drivers:
-RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+ARG INSTALL_MONGO=true
+RUN if [ ${INSTALL_MONGO} = true ]; then \
+    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
       pecl install mongo; \
       docker-php-ext-enable mongo; \
       php -m | grep -oiE '^mongo$'; \
     else \
-      if [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
+      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ] ;}; then \
         pecl install mongodb-1.9.2; \
       else \
         pecl install mongodb; \
       fi; \
       docker-php-ext-enable mongodb; \
       php -m | grep -oiE '^mongodb$'; \
-    fi
+    fi; \
+  fi
 
 ###########################################################################
 # PHP OCI8:
@@ -163,11 +186,16 @@ RUN if [ ${INSTALL_OCI8} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") = "7"
   ;fi
 
 # Install PostgreSQL drivers:
-RUN apk --update add postgresql-dev \
-  && docker-php-ext-install pdo_pgsql
+ARG INSTALL_PGSQL=true
+RUN if [ ${INSTALL_PGSQL} = true ]; then \
+  apk --update add postgresql-dev \
+  && docker-php-ext-install pdo_pgsql \
+  ;fi
 
 # Install ZipArchive:
+ARG INSTALL_ZIP_ARCHIVE=true
 RUN set -eux; \
+  if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
   apk --update add libzip-dev && \
   if [ ${LNMP_PHP_VERSION} = "7.3" ] || [ ${LNMP_PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-configure zip; \
@@ -175,10 +203,14 @@ RUN set -eux; \
   docker-php-ext-configure zip --with-libzip; \
   fi && \
   # Install the zip extension
-  docker-php-ext-install zip
+  docker-php-ext-install zip \
+  ;fi
 
 # Install MySQL Client:
-RUN apk --update add mysql-client
+ARG INSTALL_MYSQL_CLIENT=false
+RUN if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
+  apk --update add mysql-client \
+  ;fi
 
 # Install FFMPEG:
 ARG INSTALL_FFMPEG=false
@@ -216,15 +248,16 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
 ARG INSTALL_AMQP=false
 
 RUN if [ ${INSTALL_AMQP} = true ]; then \
+  docker-php-ext-install sockets; \
   apk --update add -q rabbitmq-c rabbitmq-c-dev && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  printf "\n" | pecl install amqp-1.11.0beta; \
+    printf "\n" | pecl install amqp-1.11.0; \
   else \
-  printf "\n" | pecl install amqp; \
+    printf "\n" | pecl install amqp; \
   fi && \
-  docker-php-ext-enable amqp && \
-  apk del -q rabbitmq-c-dev && \
-  docker-php-ext-install sockets \
+    docker-php-ext-enable amqp && \
+    apk del -q rabbitmq-c-dev; \
+    php -m | grep -oiE '^amqp$' \
   ;fi
 
 # Install Gearman:
@@ -263,24 +296,17 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
 
 # Install Phalcon ext
 ARG INSTALL_PHALCON=false
-ARG PHALCON_VERSION
-ENV PHALCON_VERSION ${PHALCON_VERSION}
+ARG LNMP_PHALCON_VERSION
+ENV LNMP_PHALCON_VERSION ${LNMP_PHALCON_VERSION}
 
 RUN if [ $INSTALL_PHALCON = true ]; then \
-  apk --update add unzip gcc make re2c bash\
-  && git clone https://github.com/jbboehr/php-psr.git \
-  && cd php-psr \
-  && phpize \
-  && ./configure \
-  && make \
-  && make test \
-  && make install \
-  && curl -L -o /tmp/cphalcon.zip https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.zip \
-  && unzip -d /tmp/ /tmp/cphalcon.zip \
-  && cd /tmp/cphalcon-${PHALCON_VERSION}/build \
-  && ./install \
-  && rm -rf /tmp/cphalcon* \
-  ;fi
+      apt-get update -yqq \
+      && pecl channel-update pecl.php.net \
+      && apt-get install -yqq libpcre3-dev; \
+      pecl install phalcon-${LNMP_PHALCON_VERSION}; \
+      docker-php-ext-enable phalcon; \
+      php -m | grep -q 'phalcon' \
+    ;fi
 
 ARG INSTALL_GHOSTSCRIPT=false
 RUN if [ $INSTALL_GHOSTSCRIPT = true ]; then \
@@ -288,22 +314,26 @@ RUN if [ $INSTALL_GHOSTSCRIPT = true ]; then \
   ;fi
 
 # Install Redis package:
-RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+ARG INSTALL_REDIS=true
+RUN if [ ${INSTALL_REDIS} = true ]; then \
+  # Install Redis Extension
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   printf "\n" | pecl install -o -f redis-4.3.0; \
   else \
   printf "\n" | pecl install -o -f redis; \
   fi; \
   rm -rf /tmp/pear; \
-  docker-php-ext-enable redis
-
-# Install opcache package
-# RUN docker-php-ext-configure opcache --enable-opcache && docker-php-ext-install opcache
+  docker-php-ext-enable redis \
+  ;fi
 
 ###########################################################################
 # Swoole EXTENSION
 ###########################################################################
 
+ARG INSTALL_SWOOLE=false
+
 RUN set -eux; \
+  if [ ${INSTALL_SWOOLE} = true ]; then \
     # Install Php Swoole Extension
     if   [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ]; then \
       pecl install swoole-2.0.10; \
@@ -315,7 +345,26 @@ RUN set -eux; \
       pecl install swoole; \
     fi; \
     docker-php-ext-enable swoole; \
-    php -m | grep -oiE '^swoole$';
+    php -m | grep -oiE '^swoole$'; \
+  fi
+
+###########################################################################
+# xlswriter:
+###########################################################################
+
+ARG INSTALL_XLSWRITER=false
+
+RUN set -eux; \
+    if [ ${INSTALL_XLSWRITER} = true ]; then \
+      # Install Php xlswriter Extension \
+      if   [ $(php -r "echo PHP_MAJOR_VERSION;") != "5" ]; then \
+          pecl install xlswriter && \
+          docker-php-ext-enable xlswriter && \
+          php -m | grep -q 'xlswriter'; \
+      else \
+          echo "PHP Extension for xlswriter is not supported for PHP 5.0"; \
+      fi \
+    ;fi
 
 ###########################################################################
 # Taint EXTENSION
@@ -338,27 +387,38 @@ RUN if [ ${INSTALL_TAINT} = true ]; then \
 # Imap EXTENSION
 ###########################################################################
 
-RUN apk add --update imap-dev && \
+ARG INSTALL_IMAP=false
+
+RUN if [ ${INSTALL_IMAP} = true ]; then \
+  apk add --update imap-dev && \
   docker-php-ext-configure imap --with-imap --with-imap-ssl && \
-  docker-php-ext-install imap
+  docker-php-ext-install imap \
+  ;fi
 
 ###########################################################################
 # XMLRPC:
 ###########################################################################
 
-RUN if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  pecl install xmlrpc-1.0.0RC2; \
+ARG INSTALL_XMLRPC=false
+
+RUN if [ ${INSTALL_XMLRPC} = true ]; then \
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+  pecl install xmlrpc-1.0.0RC3; \
   docker-php-ext-enable xmlrpc; \
   else \
   docker-php-ext-install xmlrpc; \
   fi; \
-  php -m | grep -r 'xmlrpc'
+  php -m | grep -r 'xmlrpc'; \
+  fi
 
 ###########################################################################
 # PHP Memcached:
 ###########################################################################
 
-RUN apk --update add libmemcached-dev; \
+ARG INSTALL_MEMCACHED=false
+
+RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
+  apk --update add libmemcached-dev; \
   # Install the php memcached extension
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   pecl install memcached-2.2.0; \
@@ -366,7 +426,8 @@ RUN apk --update add libmemcached-dev; \
   pecl install memcached; \
   fi; \
   docker-php-ext-enable memcached; \
-  php -m | grep -r 'memcached'
+  php -m | grep -r 'memcached'; \
+  fi
 
 ###########################################################################
 # SQL SERVER:
@@ -426,6 +487,38 @@ RUN set -xe; \
   && docker-php-ext-enable ssdb \
   ;fi
 
+
+############################################################################
+## Event:
+############################################################################
+USER root
+
+ARG INSTALL_EVENT=true
+
+RUN set -eux; \
+  if [ ${INSTALL_EVENT} = true ]; then \
+      curl -L -o  /tmp/libevent.tar.gz https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz   &&\
+      mkdir -p /tmp/libevent-php &&\
+      tar -C /tmp/libevent-php -zxvf /tmp/libevent.tar.gz --strip 1 &&\
+      cd /tmp/libevent-php &&\
+      ./configure --prefix=/usr/local/libevent-2.1.12  &&\
+      make &&\
+      make install &&\
+      rm /tmp/libevent.tar.gz &&\
+      docker-php-ext-install sockets  &&\
+      curl -L -o /tmp/event.tar.gz http://pecl.php.net/get/event-3.0.6.tgz &&\
+      mkdir -p /tmp/event-php &&\
+      tar -C /tmp/event-php -zxvf /tmp/event.tar.gz --strip 1 &&\
+      cd /tmp/event-php &&\
+      phpize &&\
+      ./configure  --with-event-libevent-dir=/usr/local/libevent-2.1.12/ &&\
+      make &&\
+      make install &&\
+      rm /tmp/event.tar.gz &&\
+      docker-php-ext-enable event &&\
+      php -m  | grep -q 'event' \
+;fi
+
 #
 #--------------------------------------------------------------------------
 # Optional Supervisord Configuration
@@ -462,8 +555,9 @@ RUN php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 #--------------------------------------------------------------------------
 #
 
-# Clean up
 ARG APP_CODE_PATH_CONTAINER=/var/www
+
+# Clean up
 RUN rm /var/cache/apk/* \
   && mkdir -p ${APP_CODE_PATH_CONTAINER}
 
