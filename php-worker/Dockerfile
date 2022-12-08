@@ -2,6 +2,8 @@ ARG LNMP_PHP_VERSION
 FROM php:${LNMP_PHP_VERSION}-cli-alpine
 MAINTAINER None
 
+ARG LNMP_PHP_VERSION
+
 ENV LANG=C.UTF-8
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -10,7 +12,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
-RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 RUN apk --update add wget \
   curl \
@@ -39,6 +41,15 @@ RUN pecl channel-update pecl.php.net; \
   else \
     docker-php-ext-install tokenizer; \
   fi
+
+# Add a non-root user:
+ARG PUID=1000
+ENV PUID ${PUID}
+ARG PGID=1000
+ENV PGID ${PGID}
+
+RUN addgroup -g ${PGID} www-data && \
+  adduser -D -G www-data -u ${PUID} www-data
 
 #Install BZ2:
 ARG INSTALL_BZ2=true
