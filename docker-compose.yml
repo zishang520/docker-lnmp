@@ -137,6 +137,8 @@ services:
       args:
         - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
         - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
+        - PUID=${NGINX_PUID}
+        - PGID=${NGINX_PGID}
         - http_proxy
         - https_proxy
         - no_proxy

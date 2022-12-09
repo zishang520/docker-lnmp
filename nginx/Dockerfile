@@ -15,9 +15,14 @@ RUN apk update \
 
 RUN apk add --no-cache curl
 
-RUN set -x ; \
-    addgroup -g 82 -S www ; \
-    adduser -u 82 -D -S -G www www && exit 0 ; exit 1
+# Add a non-root user:
+ARG PUID=1000
+ENV PUID ${PUID}
+ARG PGID=1000
+ENV PGID ${PGID}
+
+RUN addgroup -g ${PGID} www && \
+  adduser -D -G www -u ${PUID} www
 
 ARG PHP_UPSTREAM_CONTAINER=php-fpm
 ARG PHP_UPSTREAM_PORT=9000
