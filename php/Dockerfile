@@ -45,8 +45,8 @@ ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
 
-RUN addgroup -g ${PGID} www-data && \
-  adduser -D -G www-data -u ${PUID} www-data
+RUN addgroup -g ${PGID} www && \
+  adduser -D -G www -u ${PUID} www
 
 #Install BZ2:
 ARG INSTALL_BZ2=true
