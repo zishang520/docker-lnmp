@@ -5,7 +5,8 @@ MAINTAINER None
 ARG LNMP_PHP_VERSION
 
 ENV LANG=C.UTF-8
-ENV TZ=Asia/Shanghai
+ARG TZ=Asia/Shanghai
+ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
