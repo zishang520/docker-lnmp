@@ -172,7 +172,6 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - ${DATA_PATH_HOST}/mysql/conf.d:/etc/mysql/conf.d
       - ${DATA_PATH_HOST}/mysql/logs:/logs
       - ${DATA_PATH_HOST}/mysql/data:/var/lib/mysql
       - mysqld:/var/run/mysqld
