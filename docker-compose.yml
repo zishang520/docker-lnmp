@@ -8,6 +8,40 @@ services:
       dockerfile: Dockerfile
       args:
         - LNMP_PHP_VERSION=${PHP_VERSION}
+        - PHALCON_VERSION=${PHALCON_VERSION}
+        - INSTALL_BZ2=${PHP_WORKER_INSTALL_BZ2}
+        - INSTALL_GD=${PHP_WORKER_INSTALL_GD}
+        - INSTALL_IMAGEMAGICK=${PHP_WORKER_INSTALL_IMAGEMAGICK}
+        - INSTALL_GMP=${PHP_WORKER_INSTALL_GMP}
+        - INSTALL_GNUPG=${PHP_WORKER_INSTALL_GNUPG}
+        - INSTALL_LDAP=${PHP_WORKER_INSTALL_LDAP}
+        - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
+        - INSTALL_MONGO=${PHP_WORKER_INSTALL_MONGO}
+        - INSTALL_BCMATH=${PHP_WORKER_INSTALL_BCMATH}
+        - INSTALL_MEMCACHED=${PHP_WORKER_INSTALL_MEMCACHED}
+        - INSTALL_OCI8=${PHP_WORKER_INSTALL_OCI8}
+        - INSTALL_MSSQL=${PHP_WORKER_INSTALL_MSSQL}
+        - INSTALL_PHALCON=${PHP_WORKER_INSTALL_PHALCON}
+        - INSTALL_XLSWRITER=${PHP_WORKER_INSTALL_XLSWRITER}
+        - INSTALL_SOAP=${PHP_WORKER_INSTALL_SOAP}
+        - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
+        - INSTALL_MYSQL_CLIENT=${PHP_WORKER_INSTALL_MYSQL_CLIENT}
+        - INSTALL_AMQP=${PHP_WORKER_INSTALL_AMQP}
+        - INSTALL_CASSANDRA=${PHP_WORKER_INSTALL_CASSANDRA}
+        - INSTALL_GEARMAN=${PHP_WORKER_INSTALL_GEARMAN}
+        - INSTALL_GHOSTSCRIPT=${PHP_WORKER_INSTALL_GHOSTSCRIPT}
+        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
+        - INSTALL_TAINT=${PHP_WORKER_INSTALL_TAINT}
+        - INSTALL_FFMPEG=${PHP_WORKER_INSTALL_FFMPEG}
+        - INSTALL_AUDIOWAVEFORM=${PHP_WORKER_INSTALL_AUDIOWAVEFORM}
+        - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
+        - INSTALL_IMAP=${PHP_WORKER_INSTALL_IMAP}
+        - INSTALL_XMLRPC=${PHP_WORKER_INSTALL_XMLRPC}
+        - INSTALL_SSDB=${PHP_WORKER_INSTALL_SSDB}
+        - INSTALL_EVENT=${PHP_WORKER_INSTALL_EVENT}
+        - PUID=${PHP_WORKER_PUID}
+        - PGID=${PHP_WORKER_PGID}
+        - IMAGEMAGICK_VERSION=${PHP_WORKER_IMAGEMAGICK_VERSION}
         - http_proxy
         - https_proxy
         - no_proxy
@@ -19,6 +53,7 @@ services:
       - "127.0.0.1:9000:9000"
     working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
+      - ${DATA_PATH_HOST}/php/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ${DATA_PATH_HOST}/php/logs:/var/log/php-fpm
       - ${DATA_PATH_HOST}/php/php-fpm.d:/usr/local/etc/php-fpm.d
@@ -39,6 +74,40 @@ services:
       dockerfile: Dockerfile
       args:
         - LNMP_PHP_VERSION=${PHP_VERSION}
+        - PHALCON_VERSION=${PHALCON_VERSION}
+        - INSTALL_BZ2=${PHP_WORKER_INSTALL_BZ2}
+        - INSTALL_GD=${PHP_WORKER_INSTALL_GD}
+        - INSTALL_IMAGEMAGICK=${PHP_WORKER_INSTALL_IMAGEMAGICK}
+        - INSTALL_GMP=${PHP_WORKER_INSTALL_GMP}
+        - INSTALL_GNUPG=${PHP_WORKER_INSTALL_GNUPG}
+        - INSTALL_LDAP=${PHP_WORKER_INSTALL_LDAP}
+        - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
+        - INSTALL_MONGO=${PHP_WORKER_INSTALL_MONGO}
+        - INSTALL_BCMATH=${PHP_WORKER_INSTALL_BCMATH}
+        - INSTALL_MEMCACHED=${PHP_WORKER_INSTALL_MEMCACHED}
+        - INSTALL_OCI8=${PHP_WORKER_INSTALL_OCI8}
+        - INSTALL_MSSQL=${PHP_WORKER_INSTALL_MSSQL}
+        - INSTALL_PHALCON=${PHP_WORKER_INSTALL_PHALCON}
+        - INSTALL_XLSWRITER=${PHP_WORKER_INSTALL_XLSWRITER}
+        - INSTALL_SOAP=${PHP_WORKER_INSTALL_SOAP}
+        - INSTALL_ZIP_ARCHIVE=${PHP_WORKER_INSTALL_ZIP_ARCHIVE}
+        - INSTALL_MYSQL_CLIENT=${PHP_WORKER_INSTALL_MYSQL_CLIENT}
+        - INSTALL_AMQP=${PHP_WORKER_INSTALL_AMQP}
+        - INSTALL_CASSANDRA=${PHP_WORKER_INSTALL_CASSANDRA}
+        - INSTALL_GEARMAN=${PHP_WORKER_INSTALL_GEARMAN}
+        - INSTALL_GHOSTSCRIPT=${PHP_WORKER_INSTALL_GHOSTSCRIPT}
+        - INSTALL_SWOOLE=${PHP_WORKER_INSTALL_SWOOLE}
+        - INSTALL_TAINT=${PHP_WORKER_INSTALL_TAINT}
+        - INSTALL_FFMPEG=${PHP_WORKER_INSTALL_FFMPEG}
+        - INSTALL_AUDIOWAVEFORM=${PHP_WORKER_INSTALL_AUDIOWAVEFORM}
+        - INSTALL_REDIS=${PHP_WORKER_INSTALL_REDIS}
+        - INSTALL_IMAP=${PHP_WORKER_INSTALL_IMAP}
+        - INSTALL_XMLRPC=${PHP_WORKER_INSTALL_XMLRPC}
+        - INSTALL_SSDB=${PHP_WORKER_INSTALL_SSDB}
+        - INSTALL_EVENT=${PHP_WORKER_INSTALL_EVENT}
+        - PUID=${PHP_WORKER_PUID}
+        - PGID=${PHP_WORKER_PGID}
+        - IMAGEMAGICK_VERSION=${PHP_WORKER_IMAGEMAGICK_VERSION}
         - http_proxy
         - https_proxy
         - no_proxy
@@ -89,7 +158,10 @@ services:
       - docker_laravel_echo_server:thyz_laravel_echo_server
   docker_mysql:
     container_name: docker_mysql
-    image: mysql:${MYSQL_VERSION}
+    build:
+        context: ./mysql
+        args:
+          - MYSQL_VERSION=${MYSQL_VERSION}
     tty: true
     restart: always
     expose:
@@ -102,11 +174,14 @@ services:
       - ${DATA_PATH_HOST}/mysql/data:/var/lib/mysql
       - mysqld:/var/run/mysqld
     environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci
+      - TZ=${WORKSPACE_TIMEZONE}
   docker_redis:
     container_name: docker_redis
-    image: redis:latest
+    build: ./redis
     tty: true
     restart: always
     expose:
@@ -118,7 +193,7 @@ services:
     command: --requirepass ${REDIS_PASSWORD}
   docker_mongo:
     container_name: docker_mongo
-    image: mongo:latest
+    build: ./mongo
     tty: true
     restart: always
     expose:

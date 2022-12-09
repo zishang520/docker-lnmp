@@ -8,13 +8,10 @@ ENV LANG=C.UTF-8
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Use the default production configuration
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
 RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
-RUN apk --update add wget \
+RUN apk --no-cache --update add wget \
   curl \
   git \
   build-base \
@@ -28,7 +25,6 @@ RUN apk --update add wget \
   libgsasl-dev \
   oniguruma-dev \
   libressl \
-  libressl-dev \
   gettext-dev \
   icu-dev \
   supervisor
@@ -54,7 +50,7 @@ RUN addgroup -g ${PGID} www && \
 #Install BZ2:
 ARG INSTALL_BZ2=true
 RUN if [ ${INSTALL_BZ2} = true ]; then \
-  apk --update add bzip2-dev; \
+  apk --no-cache --update add bzip2-dev; \
   docker-php-ext-install bz2; \
   fi
 
@@ -199,7 +195,7 @@ RUN if [ ${INSTALL_OCI8} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") = "7"
 # Install PostgreSQL drivers:
 ARG INSTALL_PGSQL=true
 RUN if [ ${INSTALL_PGSQL} = true ]; then \
-  apk --update add postgresql-dev \
+  apk --no-cache --update add postgresql-dev \
   && docker-php-ext-install pdo_pgsql \
   ;fi
 
@@ -207,7 +203,7 @@ RUN if [ ${INSTALL_PGSQL} = true ]; then \
 ARG INSTALL_ZIP_ARCHIVE=true
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
-  apk --update add libzip-dev && \
+  apk --no-cache --update add libzip-dev && \
   if [ ${LNMP_PHP_VERSION} = "7.3" ] || [ ${LNMP_PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-configure zip; \
   else \
@@ -220,13 +216,13 @@ RUN set -eux; \
 # Install MySQL Client:
 ARG INSTALL_MYSQL_CLIENT=false
 RUN if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
-  apk --update add mysql-client \
+  apk --no-cache --update add mysql-client \
   ;fi
 
 # Install FFMPEG:
 ARG INSTALL_FFMPEG=false
 RUN if [ ${INSTALL_FFMPEG} = true ]; then \
-  apk --update add ffmpeg \
+  apk --no-cache --update add ffmpeg \
   ;fi
 
 # Install BBC Audio Waveform Image Generator:
@@ -260,7 +256,7 @@ ARG INSTALL_AMQP=false
 
 RUN if [ ${INSTALL_AMQP} = true ]; then \
   docker-php-ext-install sockets; \
-  apk --update add -q rabbitmq-c rabbitmq-c-dev && \
+  apk --no-cache --update add -q rabbitmq-c rabbitmq-c-dev && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
     printf "\n" | pecl install amqp-1.11.0; \
   else \
@@ -278,7 +274,7 @@ RUN if [ ${INSTALL_GEARMAN} = true ]; then \
   sed -i "\$ahttp://dl-cdn.alpinelinux.org/alpine/edge/main" /etc/apk/repositories && \
   sed -i "\$ahttp://dl-cdn.alpinelinux.org/alpine/edge/community" /etc/apk/repositories && \
   sed -i "\$ahttp://dl-cdn.alpinelinux.org/alpine/edge/testing" /etc/apk/repositories && \
-  apk --update add php7-gearman && \
+  apk --no-cache --update add php7-gearman && \
   sh -c 'echo "extension=/usr/lib/php7/modules/gearman.so" > /usr/local/etc/php/conf.d/gearman.ini' \
   ;fi
 
@@ -307,21 +303,21 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
 
 # Install Phalcon ext
 ARG INSTALL_PHALCON=false
-ARG LNMP_PHALCON_VERSION
-ENV LNMP_PHALCON_VERSION ${LNMP_PHALCON_VERSION}
+ARG PHALCON_VERSION
+ENV PHALCON_VERSION ${PHALCON_VERSION}
 
 RUN if [ $INSTALL_PHALCON = true ]; then \
       apt-get update -yqq \
       && pecl channel-update pecl.php.net \
       && apt-get install -yqq libpcre3-dev; \
-      pecl install phalcon-${LNMP_PHALCON_VERSION}; \
+      pecl install phalcon-${PHALCON_VERSION}; \
       docker-php-ext-enable phalcon; \
       php -m | grep -q 'phalcon' \
     ;fi
 
 ARG INSTALL_GHOSTSCRIPT=false
 RUN if [ $INSTALL_GHOSTSCRIPT = true ]; then \
-  apk --update add ghostscript \
+  apk --no-cache --update add ghostscript \
   ;fi
 
 # Install Redis package:
@@ -429,7 +425,7 @@ RUN if [ ${INSTALL_XMLRPC} = true ]; then \
 ARG INSTALL_MEMCACHED=false
 
 RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
-  apk --update add libmemcached-dev; \
+  apk --no-cache --update add libmemcached-dev; \
   # Install the php memcached extension
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   pecl install memcached-2.2.0; \
@@ -481,7 +477,7 @@ ARG INSTALL_SSDB=false
 
 RUN set -xe; \
   if [ ${INSTALL_SSDB} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") != "8" ]; then \
-  apk --update add sudo wget && \
+  apk --no-cache --update add sudo wget && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
   curl -L -o /tmp/ssdb-client-php.tar.gz https://github.com/jonnywang/phpssdb/archive/php7.tar.gz; \
   else \
@@ -527,6 +523,7 @@ RUN set -eux; \
       make install &&\
       rm /tmp/event.tar.gz &&\
       docker-php-ext-enable event &&\
+      mv /usr/local/etc/php/conf.d/docker-php-ext-event.ini /usr/local/etc/php/conf.d/docker-php-ext-z-event.ini &&\
       php -m  | grep -q 'event' \
 ;fi
 
@@ -569,7 +566,7 @@ RUN php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 ARG APP_CODE_PATH_CONTAINER=/var/www
 
 # Clean up
-RUN rm /var/cache/apk/* \
+RUN rm -rf /var/cache/apk/* \
   && mkdir -p ${APP_CODE_PATH_CONTAINER}
 
 WORKDIR /etc/supervisor/conf.d/
