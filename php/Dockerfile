@@ -26,7 +26,7 @@ RUN apk --no-cache --update add wget \
   libgsasl-dev \
   oniguruma-dev \
   libressl \
-  libressl-dev \
+  # libressl-dev \
   gettext-dev \
   icu-dev
 
