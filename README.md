@@ -1,5 +1,7 @@
 # Docker PHP Nginx Mysql MongoDB Redis
 
+### !!!切记使用最新版docker，否则会有一些奇奇怪怪的权限或其它问题!!!
+
 #### PHP
 >镜像：`php:8.1-fpm-alpine`
 
