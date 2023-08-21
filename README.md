@@ -5,7 +5,7 @@
 
 -  扩展支持 enchant bcmath calendar exif gettext sockets dba mysqli pcntl pdo_mysql shmop sysvmsg sysvsem sysvshm bz2 gd gmp soap xmlrpc tidy xsl zip snmp pgsql pdo_pgsql pspell pdo_dblib ldap imap intl imagick memcached redis opcache swoole mongodb 扩展
 -  **wwwroot** 目录为 `./www`
--  **容器内用户组** 默认为 `www:www` uid 1000 gid 1000(建议主机自己创建一个www uid 100 www gid 1000得用户和用户组)，可以在.env中修改
+-  **容器内用户组** 默认为 `www:www` uid 1000 gid 1000(建议主机自己创建一个www uid 1000 www gid 1000得用户和用户组)，可以在.env中修改`sudo groupadd -g 1000 www && sudo useradd -u 1000 -g 1000 -d /var/www -m -s /bin/bash www`
 -  **logs** 目录为 `./php/logs`
 -  **php-fpm.d** 目录为 `./php/php-fpm.d`
 -  **容器内Mysql主机地址(host)**: `docker_mysql`
@@ -18,7 +18,7 @@
 >镜像：`nginx:stable-alpine`
 
 -  **wwwroot** 目录为 `./www`
--  **容器内用户组** 默认为 `www:www` uid 1000 gid 1000(建议主机自己创建一个www uid 100 www gid 1000得用户和用户组)，可以在.env中修改
+-  **容器内用户组** 默认为 `www:www` uid 1000 gid 1000(建议主机自己创建一个www uid 1000 www gid 1000得用户和用户组)，可以在.env中修改`sudo groupadd -g 1000 www && sudo useradd -u 1000 -g 1000 -d /var/www -m -s /bin/bash www`
 -  **logs** 目录为 `./nginx/logs`
 -  **conf** 目录为 `./nginx/conf`
 -  **容器内PHP主机地址(host)**: `docker_php`
