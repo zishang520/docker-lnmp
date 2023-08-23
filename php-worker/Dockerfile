@@ -14,6 +14,7 @@ RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpin
 
 RUN apk --no-cache --update add wget \
   curl \
+  curl-dev \
   git \
   build-base \
   libmcrypt-dev \
@@ -25,7 +26,8 @@ RUN apk --no-cache --update add wget \
   cyrus-sasl-dev \
   libgsasl-dev \
   oniguruma-dev \
-  libressl \
+  openssl \
+  openssl-dev \
   gettext-dev \
   icu-dev \
   supervisor
