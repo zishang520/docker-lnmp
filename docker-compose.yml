@@ -170,6 +170,7 @@ services:
         - PUID=${PHP_SOCKET_PUID}
         - PGID=${PHP_SOCKET_PGID}
         - IMAGEMAGICK_VERSION=${PHP_SOCKET_IMAGEMAGICK_VERSION}
+        - SOCKET_CODE_PATH_HOST=./src
         - TZ=${TIMEZONE}
         - http_proxy
         - https_proxy

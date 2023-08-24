@@ -567,7 +567,9 @@ WORKDIR ${APP_CODE_PATH_CONTAINER}
 #--------------------------------------------------------------------------
 #
 
-COPY ./src ${APP_CODE_PATH_CONTAINER}
+ARG SOCKET_CODE_PATH_HOST=./src
+
+COPY ${SOCKET_CODE_PATH_HOST} ${APP_CODE_PATH_CONTAINER}
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"\
     && php composer-setup.php\
