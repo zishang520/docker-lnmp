@@ -223,6 +223,30 @@ services:
       - docker_redis
     links:
       - docker_redis:docker_redis
+  docker_emqx:
+    container_name: docker_emqx
+    build:
+      context: ./emqx
+      dockerfile: Dockerfile
+    tty: true
+    restart: always
+    ports:
+      - "${EMQX_MQTT_PORT}:1883"
+      - "${EMQX_MQTTS_PORT}:8883"
+      - "${EMQX_WS_PORT}:8083"
+      - "${EMQX_WSS_PORT}:8084"
+      - "${EMQX_DAPI_PORT}:18083"
+      - "127.0.0.1:11883:11883"
+      - "127.0.0.1:4370:4370"
+      - "127.0.0.1:5369:5369"
+    environment:
+      - HOCON_ENV_OVERRIDE_PREFIX=EMQX_
+      - EMQX_NAME=${EMQX_NAME}
+      - EMQX_HOST=${EMQX_HOST}
+      - EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}
+    volumes:
+      - ${DATA_PATH_HOST}/emqx/data:/opt/emqx/data
+      - ${DATA_PATH_HOST}/emqx/log:/opt/emqx/log
 volumes:
   php-fpm:
     driver: ${VOLUMES_DRIVER}
