@@ -128,6 +128,63 @@ services:
       - docker_mysql:docker_mysql
       - docker_redis:docker_redis
       - docker_mongo:docker_mongo
+  docker_socket:
+    container_name: docker_socket
+    build:
+      context: ./socket
+      dockerfile: Dockerfile
+      args:
+        - APP_CODE_PATH_CONTAINER=${APP_CODE_PATH_CONTAINER}
+        - LNMP_PHP_VERSION=${PHP_VERSION}
+        - PHALCON_VERSION=${PHALCON_VERSION}
+        - INSTALL_BZ2=${PHP_SOCKET_INSTALL_BZ2}
+        - INSTALL_GD=${PHP_SOCKET_INSTALL_GD}
+        - INSTALL_IMAGEMAGICK=${PHP_SOCKET_INSTALL_IMAGEMAGICK}
+        - INSTALL_GMP=${PHP_SOCKET_INSTALL_GMP}
+        - INSTALL_GNUPG=${PHP_SOCKET_INSTALL_GNUPG}
+        - INSTALL_LDAP=${PHP_SOCKET_INSTALL_LDAP}
+        - INSTALL_PGSQL=${PHP_SOCKET_INSTALL_PGSQL}
+        - INSTALL_MONGO=${PHP_SOCKET_INSTALL_MONGO}
+        - INSTALL_BCMATH=${PHP_SOCKET_INSTALL_BCMATH}
+        - INSTALL_MEMCACHED=${PHP_SOCKET_INSTALL_MEMCACHED}
+        - INSTALL_OCI8=${PHP_SOCKET_INSTALL_OCI8}
+        - INSTALL_MSSQL=${PHP_SOCKET_INSTALL_MSSQL}
+        - INSTALL_PHALCON=${PHP_SOCKET_INSTALL_PHALCON}
+        - INSTALL_XLSWRITER=${PHP_SOCKET_INSTALL_XLSWRITER}
+        - INSTALL_SOAP=${PHP_SOCKET_INSTALL_SOAP}
+        - INSTALL_ZIP_ARCHIVE=${PHP_SOCKET_INSTALL_ZIP_ARCHIVE}
+        - INSTALL_MYSQL_CLIENT=${PHP_SOCKET_INSTALL_MYSQL_CLIENT}
+        - INSTALL_AMQP=${PHP_SOCKET_INSTALL_AMQP}
+        - INSTALL_CASSANDRA=${PHP_SOCKET_INSTALL_CASSANDRA}
+        - INSTALL_GEARMAN=${PHP_SOCKET_INSTALL_GEARMAN}
+        - INSTALL_GHOSTSCRIPT=${PHP_SOCKET_INSTALL_GHOSTSCRIPT}
+        - INSTALL_SWOOLE=${PHP_SOCKET_INSTALL_SWOOLE}
+        - INSTALL_TAINT=${PHP_SOCKET_INSTALL_TAINT}
+        - INSTALL_FFMPEG=${PHP_SOCKET_INSTALL_FFMPEG}
+        - INSTALL_AUDIOWAVEFORM=${PHP_SOCKET_INSTALL_AUDIOWAVEFORM}
+        - INSTALL_REDIS=${PHP_SOCKET_INSTALL_REDIS}
+        - INSTALL_IMAP=${PHP_SOCKET_INSTALL_IMAP}
+        - INSTALL_XMLRPC=${PHP_SOCKET_INSTALL_XMLRPC}
+        - INSTALL_SSDB=${PHP_SOCKET_INSTALL_SSDB}
+        - INSTALL_EVENT=${PHP_SOCKET_INSTALL_EVENT}
+        - PUID=${PHP_SOCKET_PUID}
+        - PGID=${PHP_SOCKET_PGID}
+        - IMAGEMAGICK_VERSION=${PHP_SOCKET_IMAGEMAGICK_VERSION}
+        - TZ=${TIMEZONE}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    tty: true
+    restart: always
+    working_dir: ${APP_CODE_PATH_CONTAINER}
+    volumes:
+      - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+    depends_on:
+      - docker_redis
+      - docker_emqx
+    links:
+      - docker_redis:docker_redis
+      - docker_emqx:docker_emqx
   docker_nginx:
     container_name: docker_nginx
     build:
