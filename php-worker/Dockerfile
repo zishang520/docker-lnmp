@@ -318,11 +318,6 @@ RUN if [ $INSTALL_PHALCON = true ]; then \
       php -m | grep -q 'phalcon' \
     ;fi
 
-ARG INSTALL_GHOSTSCRIPT=false
-RUN if [ $INSTALL_GHOSTSCRIPT = true ]; then \
-  apk --no-cache --update add ghostscript \
-  ;fi
-
 # Install Redis package:
 ARG INSTALL_REDIS=true
 RUN if [ ${INSTALL_REDIS} = true ]; then \
