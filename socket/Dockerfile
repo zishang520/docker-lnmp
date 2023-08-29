@@ -561,6 +561,19 @@ RUN rm -rf /var/cache/apk/* \
 
 WORKDIR ${APP_CODE_PATH_CONTAINER}
 
+ADD ./startup.sh /opt/startup.sh
+RUN sed -i 's/\r//g' /opt/startup.sh
+CMD ["/bin/sh", "/opt/startup.sh"]
+
+# 暴露端口
+EXPOSE 8484 1240 1301
+
+RUN set -eux; php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"\
+    && php composer-setup.php\
+    && php -r "unlink('composer-setup.php');"\
+    && mv composer.phar /usr/local/bin/composer\
+    && chmod +x /usr/local/bin/composer
+
 #
 #--------------------------------------------------------------------------
 # Optional Socket Configuration
@@ -571,18 +584,4 @@ ARG SOCKET_CODE_PATH_HOST=./src
 
 COPY ${SOCKET_CODE_PATH_HOST} ${APP_CODE_PATH_CONTAINER}
 
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"\
-    && php composer-setup.php\
-    && php -r "unlink('composer-setup.php');"\
-    && mv composer.phar /usr/local/bin/composer\
-    && chmod +x /usr/local/bin/composer
-
-RUN cd ${APP_CODE_PATH_CONTAINER}\
-    && composer update --no-dev
-
-ADD ./startup.sh /opt/startup.sh
-RUN sed -i 's/\r//g' /opt/startup.sh
-CMD ["/bin/sh", "/opt/startup.sh"]
-
-# 暴露端口
-EXPOSE 8484 1240 1301
+RUN composer update --no-dev
