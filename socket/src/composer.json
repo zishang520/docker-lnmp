@@ -1,0 +1,6 @@
+{
+    "require": {
+        "php": ">=8.1.0"
+    },
+    "prefer-stable": true
+}

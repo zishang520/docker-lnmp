@@ -4,7 +4,6 @@ MAINTAINER None
 
 ARG LNMP_PHP_VERSION
 
-ENV LANG=C.UTF-8
 ARG TZ=Asia/Shanghai
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -12,7 +11,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Change application source from dl-cdn.alpinelinux.org to aliyun source
 RUN sed -i -e 's/http:/https:/g' /etc/apk/repositories && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
-RUN apk --no-cache --update add wget \
+RUN apk update
+
+RUN apk add --no-cache --update --no-progress wget \
   curl \
   curl-dev \
   git \
@@ -29,7 +30,8 @@ RUN apk --no-cache --update add wget \
   openssl \
   openssl-dev \
   gettext-dev \
-  icu-dev
+  icu-dev \
+  icu-data-full
 
 
 RUN pecl channel-update pecl.php.net; \
@@ -52,9 +54,9 @@ RUN addgroup -g ${PGID} www && \
 #Install GD package:
 ARG INSTALL_GD=true
 RUN if [ ${INSTALL_GD} = true ]; then \
-  apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
-  if {[ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]} || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  docker-php-ext-configure gd --prefix=/usr --with-freetype --with-jpeg --with-webp --with-xpm  --with-png; \
+  apk add --no-cache --update --no-progress freetype freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev libwebp-dev libxpm-dev; \
+  if { [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ] ;} || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+  docker-php-ext-configure gd --prefix=/usr --with-freetype --with-jpeg --with-webp --with-xpm; \
   else \
   docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/ --with-webp-dir=/usr/lib/ --with-xpm-dir=/usr/lib/ ; \
   fi; \
@@ -64,7 +66,7 @@ RUN if [ ${INSTALL_GD} = true ]; then \
 #Install BZ2:
 ARG INSTALL_BZ2=true
 RUN if [ ${INSTALL_BZ2} = true ]; then \
-  apk --no-cache --update add bzip2-dev; \
+  apk add --no-cache --update --no-progress bzip2-dev; \
   docker-php-ext-install bz2; \
   fi
 
@@ -74,7 +76,7 @@ RUN if [ ${INSTALL_BZ2} = true ]; then \
 
 ARG INSTALL_ENCHANT=false
 RUN if [ ${INSTALL_ENCHANT} = true ]; then \
-  apk --no-cache --update add libenchant-dev; \
+  apk add --no-cache --update --no-progress enchant2-dev; \
   docker-php-ext-install enchant; \
   php -m | grep -oiE '^enchant$'; \
 fi
@@ -86,7 +88,7 @@ fi
 #Install GMP package:
 ARG INSTALL_GMP=false
 RUN if [ ${INSTALL_GMP} = true ]; then \
-  apk add --update --no-cache gmp gmp-dev && \
+  apk add --no-cache --update --no-progress gmp gmp-dev && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
     ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h \
   ;fi && \
@@ -99,8 +101,8 @@ RUN if [ ${INSTALL_GMP} = true ]; then \
 
 ARG INSTALL_GNUPG=false
 RUN set -eux; if [ ${INSTALL_GNUPG} = true ]; then \
-  apk add --no-cache --no-progress --virtual BUILD_DEPS_PHP_GNUPG gpgme-dev; \
-  apk add --no-cache --no-progress gpgme; \
+  apk add --no-cache --update --no-progress --virtual BUILD_DEPS_PHP_GNUPG gpgme-dev; \
+  apk add --no-cache --update --no-progress gpgme; \
   pecl install gnupg; \
   docker-php-ext-enable gnupg; \
   fi
@@ -122,7 +124,7 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
 ARG INSTALL_XSL=false
 RUN if [ ${INSTALL_XSL} = true ]; then \
     # Install the xsl extension
-    apk add --no-cache --no-progress libxslt-dev && \
+    apk add --no-cache --update --no-progress libxslt-dev && \
     docker-php-ext-install xsl \
 ;fi
 
@@ -133,7 +135,7 @@ RUN if [ ${INSTALL_XSL} = true ]; then \
 # Install PostgreSQL drivers:
 ARG INSTALL_PGSQL=true
 RUN if [ ${INSTALL_PGSQL} = true ]; then \
-  apk --no-cache --update add postgresql-dev \
+  apk add --no-cache --update --no-progress postgresql-dev \
   && docker-php-ext-install pdo_pgsql \
   ;fi
 
@@ -222,7 +224,7 @@ fi
 ARG INSTALL_AMQP=false
 
 RUN set -eux; if [ ${INSTALL_AMQP} = true ]; then \
-  apk --no-cache --update add -q rabbitmq-c rabbitmq-c-dev && \
+  apk add --no-cache --update --no-progress -q rabbitmq-c rabbitmq-c-dev && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
     printf "\n" | pecl install amqp-1.11.0; \
   else \
@@ -241,8 +243,8 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   echo "PHP Driver for Cassandra is not supported for PHP 8.0."; \
   else \
-  apk add --update --no-cache cassandra-cpp-driver libuv gmp \
-  && apk add --update --no-cache cassandra-cpp-driver-dev gmp-dev --virtual .build-sec \
+  apk add --no-cache --update --no-progress cassandra-cpp-driver libuv gmp \
+  && apk add --no-cache --update --no-progress cassandra-cpp-driver-dev gmp-dev --virtual .build-sec \
   && cd /usr/src \
   && git clone https://github.com/datastax/php-driver.git \
   && cd php-driver/ext \
@@ -257,29 +259,6 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
   && apk del .build-sec; \
   fi \
   ;fi
-
-###########################################################################
-# GEARMAN:
-###########################################################################
-
-ARG INSTALL_GEARMAN=false
-
-RUN if [ ${INSTALL_GEARMAN} = true ]; then \
-    apk add --update --no-cache gearman-dev && \
-    cd /tmp && \
-    curl -L https://github.com/wcgallego/pecl-gearman/archive/gearman-2.0.5.zip -O && \
-    unzip gearman-2.0.5.zip && \
-    mv pecl-gearman-gearman-2.0.5 pecl-gearman && \
-    cd /tmp/pecl-gearman && \
-    phpize && \
-    ./configure && \
-    make -j$(nproc) && \
-    make install && \
-    cd / && \
-    rm /tmp/gearman-2.0.5.zip && \
-    rm -r /tmp/pecl-gearman && \
-    docker-php-ext-enable gearman \
-;fi
 
 ###########################################################################
 # xlswriter:
@@ -325,7 +304,7 @@ RUN if [ ${INSTALL_BCMATH} = true ]; then \
 ARG INSTALL_MEMCACHED=false
 
 RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
-  apk --no-cache --update add libmemcached-dev; \
+  apk add --no-cache --update --no-progress libmemcached-dev; \
   # Install the php memcached extension
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
   pecl install memcached-2.2.0; \
@@ -347,73 +326,23 @@ RUN if [ ${INSTALL_EXIF} = true ]; then \
 ;fi
 
 ###########################################################################
-# PHP OCI8:
-###########################################################################
-
-ARG INSTALL_OCI8=false
-ARG ORACLE_INSTANT_CLIENT_MIRROR=https://github.com/the-paulus/oracle-instantclient/raw/master/
-ARG ORACLE_INSTANT_CLIENT_ARCH=x86_64
-ARG ORACLE_INSTANT_CLIENT_MAJOR=18
-ARG ORACLE_INSTANT_CLIENT_MINOR=3
-
-ENV ORACLE_INSTANT_CLIENT_VERSION=${ORACLE_INSTANT_CLIENT_MAJOR}_${ORACLE_INSTANT_CLIENT_MINOR}
-ENV LD_LIBRARY_PATH="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}"
-ENV OCI_HOME="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}"
-ENV OCI_LIB_DIR="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}"
-ENV OCI_INCLUDE_DIR="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/sdk/include"
-ENV OCI_VERSION=${ORACLE_INSTANT_CLIENT_MAJOR}
-
-RUN if [ ${INSTALL_OCI8} = true ]; then \
-    # Install wget
-    apk --no-cache --update add make wget gcc musl-dev libnsl libaio poppler-utils libzip-dev zip unzip libaio-dev freetds-dev && \
-    # Install Oracle Instantclient
-    && mkdir /opt/oracle \
-        && cd /opt/oracle \
-        && wget ${ORACLE_INSTANT_CLIENT_MIRROR}instantclient-basic-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip \
-      && wget ${ORACLE_INSTANT_CLIENT_MIRROR}instantclient-sdk-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip \
-      && unzip /opt/oracle/instantclient-basic-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip -d /opt/oracle \
-      && unzip /opt/oracle/instantclient-sdk-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip -d /opt/oracle \
-      && if [ ${OCI_VERSION} -lt 18 ] ; then ln -s /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntsh.so.${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntsh.so ; fi\
-      && if [ ${OCI_VERSION} -lt 18 ] ; then ln -s /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntshcore.so.${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntshcore.so ; fi \
-      && if [ ${OCI_VERSION} -lt 18 ] ; then ln -s /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libocci.so.${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libocci.so ; fi \
-        && rm -rf /opt/oracle/*.zip && \
-    # Install PHP extensions
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      echo 'instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/' | pecl install oci8-2.0.12; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-      echo 'instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/' | pecl install oci8-2.2.0; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
-      echo "instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/" | pecl install oci8-3.0.1; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION . PHP_MINOR_VERSION;") = "81" ]; then \
-        echo "instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/" | pecl install oci8-3.2.1; \
-    else \
-      echo "instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/" | pecl install oci8; \
-    fi \
-    && docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION},${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} \
-        && docker-php-ext-configure pdo_dblib --with-libdir=/lib/x86_64-linux-gnu \
-        && docker-php-ext-install \
-                pdo_oci \
-        && docker-php-ext-enable \
-                oci8 \
-  ;fi
-
-###########################################################################
 # IonCube Loader:
 ###########################################################################
 
 ARG INSTALL_IONCUBE=false
 RUN if [ ${INSTALL_IONCUBE} = true ]; then \
-    if [ ${LARADOCK_PHP_VERSION} = "8.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.4" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
+    if [ ${LNMP_PHP_VERSION} = "8.1" ] \
+      || [ ${LNMP_PHP_VERSION} = "7.4" ] \
+      || [ ${LNMP_PHP_VERSION} = "7.3" ] \
+      || [ ${LNMP_PHP_VERSION} = "7.2" ] \
+      || [ ${LNMP_PHP_VERSION} = "7.1" ] \
+      || [ ${LNMP_PHP_VERSION} = "7.0" ] \
+      || [ ${LNMP_PHP_VERSION} = "5.6" ]; then \
       # Install the php ioncube loader
       curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
       && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
-      && mv /tmp/ioncube/ioncube_loader_lin_${LARADOCK_PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
+      && ls -al /tmp/ioncube/ \
+      && mv /tmp/ioncube/ioncube_loader_lin_${LNMP_PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
       && printf "zend_extension=ioncube_loader.so\n" > $PHP_INI_DIR/conf.d/0ioncube.ini \
       && rm -rf /tmp/ioncube* \
       && php -m | grep -oiE '^ionCube Loader$' \
@@ -447,7 +376,7 @@ RUN if [ ${INSTALL_MYSQLI} = true ]; then \
 ARG INSTALL_INTL=false
 RUN if [ ${INSTALL_INTL} = true ]; then \
     # Install intl and requirements
-    apk --no-cache --update add zlib-dev icu-dev g++ && \
+    apk add --no-cache --update --no-progress zlib-dev icu-dev g++ && \
     docker-php-ext-configure intl && \
     docker-php-ext-install intl \
 ;fi
@@ -455,9 +384,9 @@ RUN if [ ${INSTALL_INTL} = true ]; then \
 ###########################################################################
 # LDAP:
 ###########################################################################
-ARG INSTALL_LDAP=false;
+ARG INSTALL_LDAP=false
 RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
-  apk add --no-cache --no-progress openldap-dev; \
+  apk add --no-cache --update --no-progress openldap-dev; \
   docker-php-ext-install ldap; \
   php -m | grep -oiE '^ldap$'; \
   fi
@@ -471,7 +400,7 @@ ARG IMAGEMAGICK_VERSION=latest
 ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
 RUN set -eux; \
   if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
-  apk add --update --no-cache imagemagick-dev imagemagick; \
+  apk add --no-cache --update --no-progress imagemagick-dev imagemagick; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   cd /tmp && \
   if [ ${IMAGEMAGICK_VERSION} = "latest" ]; then \
@@ -499,7 +428,7 @@ RUN set -eux; \
 ARG INSTALL_IMAP=false
 
 RUN if [ ${INSTALL_IMAP} = true ]; then \
-  apk add --update imap-dev && \
+  apk add --no-cache --update --no-progress imap-dev && \
   docker-php-ext-configure imap --with-imap --with-imap-ssl && \
   docker-php-ext-install imap \
   ;fi
@@ -513,8 +442,8 @@ ARG PHALCON_VERSION
 ENV PHALCON_VERSION ${PHALCON_VERSION}
 
 RUN if [ $INSTALL_PHALCON = true ]; then \
-      && pecl channel-update pecl.php.net \
-      && apk add --update --no-cache add pcre-dev; \
+      pecl channel-update pecl.php.net; \
+      apk add --no-cache --update --no-progress pcre-dev; \
       pecl install phalcon-${PHALCON_VERSION}; \
       docker-php-ext-enable phalcon; \
       php -m | grep -q 'phalcon' \
@@ -546,7 +475,7 @@ ARG INSTALL_SSDB=false
 
 RUN set -xe; \
   if [ ${INSTALL_SSDB} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") != "8" ]; then \
-  apk --no-cache --update add sudo wget && \
+  apk add --no-cache --update --no-progress sudo wget && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
   curl -L -o /tmp/ssdb-client-php.tar.gz https://github.com/jonnywang/phpssdb/archive/php7.tar.gz; \
   else \
@@ -569,9 +498,9 @@ RUN set -xe; \
 USER root
 
 ARG INSTALL_EVENT=true
-
 RUN set -eux; \
   if [ ${INSTALL_EVENT} = true ]; then \
+      apk add --no-cache --update --no-progress python3 && \
       curl -L -o  /tmp/libevent.tar.gz https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz   &&\
       mkdir -p /tmp/libevent-php &&\
       tar -C /tmp/libevent-php -zxvf /tmp/libevent.tar.gz --strip 1 &&\
@@ -592,14 +521,15 @@ RUN set -eux; \
       rm /tmp/event.tar.gz &&\
       docker-php-ext-enable event &&\
       mv /usr/local/etc/php/conf.d/docker-php-ext-event.ini /usr/local/etc/php/conf.d/docker-php-ext-z-event.ini &&\
-      php -m  | grep -q 'event' \
+      php -m  | grep -q 'event' &&\
+      apk del python3 \
 ;fi
 
 # Install ZipArchive:
 ARG INSTALL_ZIP_ARCHIVE=true
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
-  apk --no-cache --update add libzip-dev && \
+  apk add --no-cache --update --no-progress libzip-dev && \
   if [ ${LNMP_PHP_VERSION} = "7.3" ] || [ ${LNMP_PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-configure zip; \
   else \
@@ -612,39 +542,13 @@ RUN set -eux; \
 # Install MySQL Client:
 ARG INSTALL_MYSQL_CLIENT=false
 RUN if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
-  apk --no-cache --update add mysql-client \
+  apk add --no-cache --update --no-progress mysql-client \
   ;fi
 
 # Install FFMPEG:
 ARG INSTALL_FFMPEG=false
 RUN if [ ${INSTALL_FFMPEG} = true ]; then \
-  apk --no-cache --update add ffmpeg \
-  ;fi
-
-# Install BBC Audio Waveform Image Generator:
-ARG INSTALL_AUDIOWAVEFORM=false
-RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
-  apk add git make cmake gcc g++ libmad-dev libid3tag-dev libsndfile-dev gd-dev boost-dev libgd libpng-dev zlib-dev \
-  && apk add autoconf automake libtool gettext \
-  && wget https://github.com/xiph/flac/archive/1.3.3.tar.gz \
-  && tar xzf 1.3.3.tar.gz \
-  && cd flac-1.3.3 \
-  && ./autogen.sh \
-  && ./configure --enable-shared=no \
-  && make \
-  && make install \
-  && cd .. \
-  && git clone https://github.com/bbc/audiowaveform.git \
-  && cd audiowaveform \
-  && wget https://github.com/google/googletest/archive/release-1.10.0.tar.gz \
-  && tar xzf release-1.10.0.tar.gz \
-  && ln -s googletest-release-1.10.0/googletest googletest \
-  && ln -s googletest-release-1.10.0/googlemock googlemock \
-  && mkdir build \
-  && cd build \
-  && cmake .. \
-  && make \
-  && make install \
+  apk add --no-cache --update --no-progress ffmpeg \
   ;fi
 
 ###########################################################################
@@ -669,7 +573,8 @@ ENV LC_ALL ${LOCALE}
 ARG APP_CODE_PATH_CONTAINER=/var/www
 
 # Clean up
-RUN rm -rf /var/cache/apk/* \
+RUN rm -rf /tmp/* \
+  && rm -rf /var/cache/apk/* \
   && mkdir -p ${APP_CODE_PATH_CONTAINER}
 
 WORKDIR ${APP_CODE_PATH_CONTAINER}
