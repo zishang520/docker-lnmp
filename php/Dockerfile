@@ -331,7 +331,8 @@ RUN if [ ${INSTALL_EXIF} = true ]; then \
 
 ARG INSTALL_IONCUBE=false
 RUN if [ ${INSTALL_IONCUBE} = true ]; then \
-    if [ ${LNMP_PHP_VERSION} = "8.1" ] \
+    if [ ${LNMP_PHP_VERSION} = "8.2" ] \
+      || [ ${LNMP_PHP_VERSION} = "8.1" ] \
       || [ ${LNMP_PHP_VERSION} = "7.4" ] \
       || [ ${LNMP_PHP_VERSION} = "7.3" ] \
       || [ ${LNMP_PHP_VERSION} = "7.2" ] \
