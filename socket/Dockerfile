@@ -518,7 +518,10 @@ RUN set -eux; \
       ./configure  --with-event-libevent-dir=/usr/local/libevent-2.1.12/ &&\
       make &&\
       make install &&\
-      rm /tmp/event.tar.gz &&\
+      rm /tmp/event.tar.gz \
+;fi
+RUN set -eux; \
+  if [ ${INSTALL_EVENT} = true ]; then \
       docker-php-ext-enable event &&\
       mv /usr/local/etc/php/conf.d/docker-php-ext-event.ini /usr/local/etc/php/conf.d/docker-php-ext-z-event.ini &&\
       php -m  | grep -q 'event' &&\
