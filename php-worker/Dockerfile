@@ -34,6 +34,11 @@ RUN apk add --no-cache --update --no-progress wget \
   icu-data-full \
   supervisor
 
+RUN if [ "${http_proxy}" != "" ]; then \
+    # Needed for pecl to succeed
+    pear config-set http_proxy ${http_proxy} \
+;fi
+
 RUN pecl channel-update pecl.php.net; \
   docker-php-ext-install mbstring pdo pdo_mysql xml; \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ]; then \
@@ -90,7 +95,8 @@ ARG INSTALL_GMP=false
 RUN if [ ${INSTALL_GMP} = true ]; then \
   apk add --no-cache --update --no-progress gmp gmp-dev && \
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-    ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h \
+    ARCH=$(uname -m) && \
+    ln -s /usr/include/${ARCH}-linux-gnu/gmp.h /usr/include/gmp.h \
   ;fi && \
   docker-php-ext-install gmp \
   ;fi
@@ -143,18 +149,19 @@ RUN if [ ${INSTALL_PGSQL} = true ]; then \
 # PHP REDIS EXTENSION
 ###########################################################################
 
-# Install Redis package:
 ARG INSTALL_REDIS=true
 RUN if [ ${INSTALL_REDIS} = true ]; then \
-  # Install Redis Extension
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-  printf "\n" | pecl install -o -f redis-4.3.0; \
-  else \
-  printf "\n" | pecl install -o -f redis; \
-  fi; \
-  rm -rf /tmp/pear; \
-  docker-php-ext-enable redis \
-  ;fi
+    # Install Php Redis Extension
+    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+      pecl install -o -f redis-4.3.0; \
+    elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ] ;}; then \
+      pecl install -o -f redis-5.3.7; \
+    else \
+      pecl install -o -f redis; \
+    fi \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-enable redis \
+;fi
 
 ###########################################################################
 # Swoole EXTENSION
