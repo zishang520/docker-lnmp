@@ -350,6 +350,8 @@ services:
       dockerfile: Dockerfile
     tty: true
     restart: always
+    expose:
+      - "9000"
     ports:
       - "${MINIO_PORT}:9000"
       - "${MINIO_CONSOLE_PORT}:9001"
