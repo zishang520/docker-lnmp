@@ -1,4 +1,17 @@
-version: "3.5"
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+volumes:
+  php-fpm:
+    driver: ${VOLUMES_DRIVER}
+  mysqld:
+    driver: ${VOLUMES_DRIVER}
+  minio:
+    driver: ${VOLUMES_DRIVER}
+  redis:
+    driver: ${VOLUMES_DRIVER}
 
 services:
   docker_php:
@@ -56,6 +69,8 @@ services:
       - "9000"
     ports:
       - "127.0.0.1:9000:9000"
+    extra_hosts:
+      - "dockerhost:${DOCKER_HOST_IP}"
     working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
       - ${DATA_PATH_HOST}/php/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
@@ -69,11 +84,8 @@ services:
       - docker_redis
       - docker_mongo
       - docker_minio
-    links:
-      - docker_mysql:docker_mysql
-      - docker_redis:docker_redis
-      - docker_mongo:docker_mongo
-      - docker_minio:docker_minio
+    networks:
+      - backend
   docker_php_worker:
     container_name: docker_php_worker
     build:
@@ -125,6 +137,8 @@ services:
         - no_proxy
     tty: true
     restart: always
+    extra_hosts:
+      - "dockerhost:${DOCKER_HOST_IP}"
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
@@ -134,11 +148,8 @@ services:
       - docker_redis
       - docker_mongo
       - docker_minio
-    links:
-      - docker_mysql:docker_mysql
-      - docker_redis:docker_redis
-      - docker_mongo:docker_mongo
-      - docker_minio:docker_minio
+    networks:
+      - backend
   docker_socket:
     container_name: docker_socket
     build:
@@ -191,15 +202,17 @@ services:
         - no_proxy
     tty: true
     restart: always
+    extra_hosts:
+      - "dockerhost:${DOCKER_HOST_IP}"
     working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
       - ${NGINX_SSL_PATH}:/etc/nginx/ssl
     depends_on:
       - docker_redis
       - docker_emqx
-    links:
-      - docker_redis:docker_redis
-      - docker_emqx:docker_emqx
+    networks:
+      - frontend
+      - backend
   docker_nginx:
     container_name: docker_nginx
     build:
@@ -227,10 +240,9 @@ services:
       - php-fpm:/var/run/php-fpm
     depends_on:
       - docker_php
-      - docker_laravel_echo_server
-    links:
-      - docker_php:docker_php
-      - docker_laravel_echo_server:docker_laravel_echo_server
+    networks:
+      - frontend
+      - backend
   docker_mysql:
     container_name: docker_mysql
     build:
@@ -253,6 +265,8 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - TZ=${TIMEZONE}
+    networks:
+      - backend
   docker_redis:
     container_name: docker_redis
     build: ./redis
@@ -265,6 +279,8 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/redis/data:/data
     command: --requirepass ${REDIS_PASSWORD}
+    networks:
+      - backend
   docker_mongo:
     container_name: docker_mongo
     build: ./mongod
@@ -280,6 +296,8 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/mongod/db:/data/db
       - ${DATA_PATH_HOST}/mongod/configdb:/data/configdb
+    networks:
+      - backend
   docker_laravel_echo_server:
     container_name: docker_laravel_echo_server
     build:
@@ -291,10 +309,13 @@ services:
       - ${DATA_PATH_HOST}/laravel-echo-server/laravel-echo-server.json:/usr/src/app/laravel-echo-server.json:ro
     ports:
       - "${LARAVEL_ECHO_SERVER_PORT}:6001"
+    extra_hosts:
+      - "dockerhost:${DOCKER_HOST_IP}"
     depends_on:
       - docker_redis
-    links:
-      - docker_redis:docker_redis
+    networks:
+      - frontend
+      - backend
   docker_emqx:
     container_name: docker_emqx
     build:
@@ -319,24 +340,25 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/emqx/data:/opt/emqx/data
       - ${DATA_PATH_HOST}/emqx/log:/opt/emqx/log
-    docker_minio:
-      container_name: docker_minio
-      build:
-        context: ./minio
-        dockerfile: Dockerfile
-      ports:
-        - "${MINIO_PORT}:9000"
-        - "${MINIO_CONSOLE_PORT}:9001"
-      environment:
-        - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-        - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      volumes:
-        - ${DATA_PATH_HOST}/minio/data:/export
-        - ${DATA_PATH_HOST}/minio/config:/root/.minio
-volumes:
-  php-fpm:
-    driver: ${VOLUMES_DRIVER}
-  mysqld:
-    driver: ${VOLUMES_DRIVER}
-  minio:
-    driver: ${VOLUMES_DRIVER}
+    networks:
+      - frontend
+      - backend
+  docker_minio:
+    container_name: docker_minio
+    build:
+      context: ./minio
+      dockerfile: Dockerfile
+    tty: true
+    restart: always
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ${DATA_PATH_HOST}/minio/data:/export
+      - ${DATA_PATH_HOST}/minio/config:/root/.minio
+    networks:
+      - frontend
+      - backend
