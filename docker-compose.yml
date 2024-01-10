@@ -211,7 +211,6 @@ services:
       - docker_redis
       - docker_emqx
     networks:
-      - frontend
       - backend
   docker_nginx:
     container_name: docker_nginx
@@ -241,7 +240,6 @@ services:
     depends_on:
       - docker_php
     networks:
-      - frontend
       - backend
   docker_mysql:
     container_name: docker_mysql
@@ -314,7 +312,6 @@ services:
     depends_on:
       - docker_redis
     networks:
-      - frontend
       - backend
   docker_emqx:
     container_name: docker_emqx
@@ -341,7 +338,6 @@ services:
       - ${DATA_PATH_HOST}/emqx/data:/opt/emqx/data
       - ${DATA_PATH_HOST}/emqx/log:/opt/emqx/log
     networks:
-      - frontend
       - backend
   docker_minio:
     container_name: docker_minio
@@ -362,5 +358,4 @@ services:
       - ${DATA_PATH_HOST}/minio/data:/export
       - ${DATA_PATH_HOST}/minio/config:/root/.minio
     networks:
-      - frontend
       - backend
