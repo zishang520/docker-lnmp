@@ -78,6 +78,7 @@ services:
       - ${DATA_PATH_HOST}/php/php-fpm.d:/usr/local/etc/php-fpm.d
       - php-fpm:/var/run/php-fpm
       - mysqld:/var/run/mysqld
+      - postgres:/var/run/postgres
     depends_on:
       - docker_mysql
       - docker_redis
@@ -141,6 +142,7 @@ services:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
       - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
       - mysqld:/var/run/mysqld
+      - postgres:/var/run/postgres
     depends_on:
       - docker_mysql
       - docker_redis
@@ -251,6 +253,7 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/mysql/logs:/logs
       - ${DATA_PATH_HOST}/mysql/data:/var/lib/mysql
+      - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
       - mysqld:/var/run/mysqld
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -268,8 +271,9 @@ services:
           - POSTGRES_VERSION=${POSTGRES_VERSION}
     restart: always
     volumes:
-      - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
+      - ${DATA_PATH_HOST}/postgres/data:/var/lib/postgresql
       - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+      - postgres:/var/run/postgres
     ports:
       - "${POSTGRES_PORT}:5432"
     environment:
