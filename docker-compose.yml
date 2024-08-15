@@ -371,3 +371,24 @@ services:
       - ${DATA_PATH_HOST}/minio/config:/root/.minio
     networks:
       - backend
+  docker_srs:
+    container_name: docker_srs
+    build:
+      context: ./srs
+      dockerfile: Dockerfile
+    tty: true
+    restart: always
+    expose:
+      - "10080" # srt
+      - "1935" # rtmp
+      - "1985" # 1) clients / streams / vhosts; # 2) whip / whiep (webrtc signaling);
+      - "5060"
+      - "8000" # WebRTC UDP port
+      - "8080" # http
+      - "9000"
+    environment:
+      - CANDIDATE=${SRS_CANDIDATE}
+    volumes:
+      - ${DATA_PATH_HOST}/srs/srs.conf:/usr/local/srs/conf/srs.conf
+    networks:
+      - backend
