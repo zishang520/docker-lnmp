@@ -1,7 +1,5 @@
 FROM nginx:alpine
 
-MAINTAINER None
-
 COPY nginx.conf /etc/nginx/
 
 # 修改源并更新包
