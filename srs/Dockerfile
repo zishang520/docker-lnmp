@@ -5,4 +5,4 @@ COPY srs.conf /usr/local/srs/conf/
 
 WORKDIR /usr/local/srs
 
-CMD ["./objs/srs" "-c" "conf/srs.conf"]
+CMD ["/usr/local/srs/objs/srs", "-c", "conf/srs.conf"]
