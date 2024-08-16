@@ -379,13 +379,21 @@ services:
     tty: true
     restart: always
     expose:
+      - "10080" # srt
+      - "1935" # rtmp
+      - "1985" # 1) clients / streams / vhosts; # 2) whip / whiep (webrtc signaling);
+      - "5060"
+      - "8000" # WebRTC UDP port
+      - "8080" # http
+      - "9000"
+    ports:
       - "${SRS_SRT_PORT}:10080" # srt
       - "${SRS_RTMP_PORT}:1935" # rtmp
       - "${SRS_TCP_PORT}:1985" # 1) clients / streams / vhosts; # 2) whip / whiep (webrtc signaling);
       - "${SRS_SIP_PORT}:5060"
       - "${SRS_UDP_PORT}:8000" # WebRTC UDP port
       - "${SRS_HTTP_PORT}:8080" # http
-      - "${SRS_RTP_PORT}:9000"
+      - "${SRS_RTP_PORT}:9090"
     environment:
       - CANDIDATE=${SRS_CANDIDATE}
     volumes:
