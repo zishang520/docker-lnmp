@@ -242,9 +242,9 @@ services:
   docker_mysql:
     container_name: docker_mysql
     build:
-        context: ./mysql
-        args:
-          - MYSQL_VERSION=${MYSQL_VERSION}
+      context: ./mysql
+      args:
+        - MYSQL_VERSION=${MYSQL_VERSION}
     restart: always
     expose:
       - "3306"
@@ -266,9 +266,9 @@ services:
   docker_postgres:
     container_name: docker_postgres
     build:
-        context: ./postgres
-        args:
-          - POSTGRES_VERSION=${POSTGRES_VERSION}
+      context: ./postgres
+      args:
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
     restart: always
     volumes:
       - ${DATA_PATH_HOST}/postgres/data:/var/lib/postgresql
@@ -379,13 +379,13 @@ services:
     tty: true
     restart: always
     expose:
-      - "10080" # srt
-      - "1935" # rtmp
-      - "1985" # 1) clients / streams / vhosts; # 2) whip / whiep (webrtc signaling);
-      - "5060"
-      - "8000" # WebRTC UDP port
-      - "8080" # http
-      - "9000"
+      - "${SRS_SRT_PORT}:10080" # srt
+      - "${SRS_RTMP_PORT}:1935" # rtmp
+      - "${SRS_TCP_PORT}:1985" # 1) clients / streams / vhosts; # 2) whip / whiep (webrtc signaling);
+      - "${SRS_SIP_PORT}:5060"
+      - "${SRS_UDP_PORT}:8000" # WebRTC UDP port
+      - "${SRS_HTTP_PORT}:8080" # http
+      - "${SRS_RTP_PORT}:9000"
     environment:
       - CANDIDATE=${SRS_CANDIDATE}
     volumes:
