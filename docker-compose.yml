@@ -400,3 +400,26 @@ services:
       - ${DATA_PATH_HOST}/srs/srs.conf:/usr/local/srs/conf/srs.conf
     networks:
       - backend
+  docker_etcd:
+    container_name: docker_etcd
+    build:
+      context: ./etcd
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - ETCD_DATA_DIR=${ETCD_DATA_DIR}
+      - ETCD_ADVERTISE_CLIENT_URLS=${ETCD_ADVERTISE_CLIENT_URLS}
+      - ETCD_LISTEN_CLIENT_URLS=${ETCD_LISTEN_CLIENT_URLS}
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=${ETCD_INITIAL_ADVERTISE_PEER_URLS}
+      - ETCD_LISTEN_PEER_URLS=${ETCD_LISTEN_PEER_URLS}
+      - ETCD_INITIAL_CLUSTER_TOKEN=${ETCD_INITIAL_CLUSTER_TOKEN}
+      - ETCD_INITIAL_CLUSTER=${ETCD_INITIAL_CLUSTER}
+      - ETCD_INITIAL_CLUSTER_STATE=${ETCD_INITIAL_CLUSTER_STATE}
+      - ETCD_NAME=${ETCD_NAME}
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - ${DATA_PATH_HOST}/etcd/etcd-data:/etcd-data
+    networks:
+      - backend

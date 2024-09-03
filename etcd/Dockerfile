@@ -1,0 +1,2 @@
+ARG ETCD_VERSION=v3.5.15
+FROM quay.io/coreos/etcd:${ETCD_VERSION}
