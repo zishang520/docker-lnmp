@@ -376,6 +376,8 @@ services:
     build:
       context: ./srs
       dockerfile: Dockerfile
+      args:
+        - SRS_VERSION=${SRS_VERSION}
     tty: true
     restart: always
     expose:
@@ -405,6 +407,8 @@ services:
     build:
       context: ./etcd
       dockerfile: Dockerfile
+      args:
+        - ETCD_VERSION=${ETCD_VERSION}
     restart: always
     environment:
       - ETCD_DATA_DIR=${ETCD_DATA_DIR}
