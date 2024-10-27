@@ -534,8 +534,7 @@ RUN set -eux; \
 
 # Install ZipArchive:
 ARG INSTALL_ZIP_ARCHIVE=true
-RUN set -eux; \
-  if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
+RUN if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
   apk add --no-cache --update --no-progress libzip-dev && \
   if [ ${LNMP_PHP_VERSION} = "7.3" ] || [ ${LNMP_PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-configure zip; \
