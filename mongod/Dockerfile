@@ -5,7 +5,7 @@ LABEL maintainer=None
 
 VOLUME /data/db /data/configdb
 
-CMD ["mongod"]
+CMD ["mongod", "--quiet"]
 
 EXPOSE 27017
 

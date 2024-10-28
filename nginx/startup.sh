@@ -7,8 +7,5 @@ if [ ! -f /etc/nginx/ssl/default.crt ]; then
     chmod 644 /etc/nginx/ssl/default.key
 fi
 
-# Start crond in background
-crond -l 2 -b
-
 # Start nginx in foreground
 nginx
