@@ -79,6 +79,9 @@ services:
       - php-fpm:/var/run/php-fpm
       - mysqld:/var/run/mysqld
       - postgres:/var/run/postgres
+    environment:
+      - TZ=${TIMEZONE}
+      - DOCKER_HOST_IP=${DOCKER_HOST_IP}
     depends_on:
       - docker_mysql
       - docker_redis
@@ -143,6 +146,9 @@ services:
       - ${DATA_PATH_HOST}/php-worker/supervisord.d:/etc/supervisord.d
       - mysqld:/var/run/mysqld
       - postgres:/var/run/postgres
+    environment:
+      - TZ=${TIMEZONE}
+      - DOCKER_HOST_IP=${DOCKER_HOST_IP}
     depends_on:
       - docker_mysql
       - docker_redis
@@ -206,6 +212,9 @@ services:
     working_dir: ${APP_CODE_PATH_CONTAINER}
     volumes:
       - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+    environment:
+      - TZ=${TIMEZONE}
+      - DOCKER_HOST_IP=${DOCKER_HOST_IP}
     depends_on:
       - docker_redis
       - docker_emqx
@@ -319,6 +328,9 @@ services:
     restart: always
     volumes:
       - ${DATA_PATH_HOST}/laravel-echo-server/laravel-echo-server.json:/usr/src/app/laravel-echo-server.json:ro
+    environment:
+      - TZ=${TIMEZONE}
+      - DOCKER_HOST_IP=${DOCKER_HOST_IP}
     ports:
       - "${LARAVEL_ECHO_SERVER_PORT}:6001"
     extra_hosts:
