@@ -387,7 +387,7 @@ services:
       - "5060"
       - "8000/udp" # WebRTC UDP port
       - "8080" # http
-      - "9000"
+      - "9090"
     ports:
       - "${SRS_SRT_PORT}:10080" # srt
       - "${SRS_RTMP_PORT}:1935" # rtmp
